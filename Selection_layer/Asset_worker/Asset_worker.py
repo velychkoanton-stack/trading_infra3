@@ -228,22 +228,44 @@ class AssetWorker:
         listed_symbols = self.sync_exchange_symbols()
         self.logger.info("Listed symbols synced | count=%s", len(listed_symbols))
 
-        assets = self.select_assets_for_processing()
+        total_processed = 0
+        batch_number = 0
 
-        if not assets:
-            self.logger.info("No assets selected for processing")
-            return
+        while True:
+            assets = self.select_assets_for_processing()
 
-        for asset in assets:
-            symbol = asset["symbol"]
+            if not assets:
+                self.logger.info(
+                    "No more assets selected for processing | total_processed=%s batches=%s",
+                    total_processed,
+                    batch_number,
+                )
+                break
 
-            try:
-                self.process_one_asset(symbol)
-            except Exception:
-                self.logger.exception("Asset processing failed | symbol=%s", symbol)
-                force_gc()
+            batch_number += 1
+            self.logger.info(
+                "Starting batch | batch_number=%s batch_size=%s",
+                batch_number,
+                len(assets),
+            )
 
-        self.logger.info("Asset worker finished | processed=%s", len(assets))
+            for asset in assets:
+                symbol = asset["symbol"]
+
+                try:
+                    self.process_one_asset(symbol)
+                    total_processed += 1
+                except Exception:
+                    self.logger.exception("Asset processing failed | symbol=%s", symbol)
+                    force_gc()
+
+            force_gc()
+
+        self.logger.info(
+            "Asset worker finished | total_processed=%s batches=%s",
+            total_processed,
+            batch_number,
+        )
 
 
 def main() -> None:
