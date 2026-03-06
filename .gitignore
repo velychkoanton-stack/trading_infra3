@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+data/logs/
+data/parquet_db/
+
+API/api_bybit_main.txt
+API/api_mysql_main.txt
+API/api_telegram_main.txt
+
+.env
