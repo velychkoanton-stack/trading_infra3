@@ -27,7 +27,7 @@ ASSET_MAX_PVALUE=0.05
 
 # Current project logic:
 # acceptable assets are selected with non_stationary_status = 0
-ASSET_REQUIRE_NON_STATIONARY_STATUS=NONE
+ASSET_REQUIRE_NON_STATIONARY_STATUS=0
 
 # =========================================
 # Parquet / data refresh rules
