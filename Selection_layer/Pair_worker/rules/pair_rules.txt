@@ -19,7 +19,7 @@ STAT_VALIDITY_DAYS=60
 # =========================================
 MIN_LIQ_5M=1000
 MIN_LIQ_1H=12000
-MAX_ASSET_PRESENCE=0.03
+MAX_ASSET_PRESENCE=0.01
 
 # Asset-side ADF filters from asset_universe
 ASSET_MAX_ADF=-2.9
