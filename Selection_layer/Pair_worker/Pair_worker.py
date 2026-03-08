@@ -279,7 +279,12 @@ class PairWorker:
                 api_file_name=self.mysql_api_file,
                 params_seq=batch,
             )
-            inserted_estimate += len(batch)
+            rows_inserted = execute_many(
+                sql=self.sql_insert_new_pairs_ignore,
+                api_file_name=self.mysql_api_file,
+                params_seq=batch,
+                )
+            inserted_estimate += rows_inserted
 
         return inserted_estimate
 
@@ -613,12 +618,22 @@ class PairWorker:
         stat_pairs = self.select_pairs_for_stat_test(available_symbols)
         self.logger.info("Pairs selected for stat test | count=%s", len(stat_pairs))
 
+        bt_pairs = self.select_pairs_for_backtest(available_symbols)
+        self.logger.info("Pairs selected for backtest | count=%s", len(bt_pairs))
+
+        if created_pairs_estimate == 0 and len(stat_pairs) == 0 and len(bt_pairs) == 0:
+            self.logger.info(
+                "No work found for current asset pool | symbols=%s",
+                available_symbols,
+            )
+            cleanup_objects(asset_data, parquet_asset_pool, asset_pool, grid_df, stat_pairs, bt_pairs)
+            force_gc()
+            safe_sleep(max(float(self.rules["PAIR_LOOP_SLEEP_SEC"]), 1.0))
+            return
+
         for row in stat_pairs:
             self.run_stat_test_for_pair(row, asset_data)
             force_gc()
-
-        bt_pairs = self.select_pairs_for_backtest(available_symbols)
-        self.logger.info("Pairs selected for backtest | count=%s", len(bt_pairs))
 
         for row in bt_pairs:
             self.run_backtest_for_pair(row, asset_data, grid_df)
