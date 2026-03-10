@@ -8,6 +8,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from Common.db.db_execute import fetch_all, execute
+from Common.db.heartbeat_writer import write_heartbeat
 from Common.utils.cleanup import force_gc
 from Common.utils.logger import setup_logger
 from Common.utils.sql_file_loader import load_sql_file
@@ -58,13 +59,29 @@ class SchedulerWorker:
     def run_forever(self) -> None:
         self.logger.info("Scheduler worker started. loop_sec=%s timezone=%s", self.loop_sec, self.timezone_name)
 
+        self._safe_write_heartbeat(
+            runtime_status="RUNNING",
+            comment="scheduler_started",
+        )
+
         while True:
             loop_started = time.time()
 
             try:
                 self.run_once()
-            except Exception:
+
+                self._safe_write_heartbeat(
+                    runtime_status="RUNNING",
+                    comment="loop_ok",
+                )
+
+            except Exception as exc:
                 self.logger.exception("Scheduler loop failed")
+
+                self._safe_write_heartbeat(
+                    runtime_status="ERROR",
+                    comment=self._truncate_comment(f"loop_error:{type(exc).__name__}"),
+                )
 
             elapsed = time.time() - loop_started
             sleep_seconds = max(1.0, self.loop_sec - elapsed)
@@ -107,6 +124,24 @@ class SchedulerWorker:
             changed_count,
             now_local.strftime("%Y-%m-%d %H:%M:%S %Z"),
         )
+
+    def _safe_write_heartbeat(self, runtime_status: str, comment: str | None) -> None:
+        """
+        Heartbeat must never break the scheduler loop.
+        """
+        try:
+            write_heartbeat(
+                worker_id="scheduler",
+                runtime_status=runtime_status,
+                comment=comment,
+                api_file_name=self.mysql_api_file,
+            )
+        except Exception:
+            self.logger.exception(
+                "Failed to write scheduler heartbeat | runtime_status=%s | comment=%s",
+                runtime_status,
+                comment,
+            )
 
     def _fetch_existing_scheduler_rows(self) -> dict[str, dict[str, Any]]:
         rows = fetch_all(
@@ -174,6 +209,12 @@ class SchedulerWorker:
             str(current_row.get("control_status", "")).upper() == str(desired_row["control_status"]).upper()
             and (current_row.get("comment") or "") == (desired_row["comment"] or "")
         )
+
+    @staticmethod
+    def _truncate_comment(comment: str | None, max_len: int = 64) -> str | None:
+        if comment is None:
+            return None
+        return str(comment)[:max_len]
 
     @staticmethod
     def _load_rules_file(file_path: Path) -> dict[str, str]:

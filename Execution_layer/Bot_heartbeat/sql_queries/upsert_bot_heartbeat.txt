@@ -1,0 +1,16 @@
+INSERT INTO bot_heartbeat (
+    worker_id,
+    runtime_status,
+    last_update_ts,
+    comment
+)
+VALUES (
+    %(worker_id)s,
+    %(runtime_status)s,
+    %(last_update_ts)s,
+    %(comment)s
+)
+ON DUPLICATE KEY UPDATE
+    runtime_status = VALUES(runtime_status),
+    last_update_ts = VALUES(last_update_ts),
+    comment = VALUES(comment);
