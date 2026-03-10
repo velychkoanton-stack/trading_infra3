@@ -1,0 +1,16 @@
+INSERT INTO scheduler (
+    worker_id,
+    control_status,
+    last_update_ts,
+    comment
+)
+VALUES (
+    %(worker_id)s,
+    %(control_status)s,
+    %(last_update_ts)s,
+    %(comment)s
+)
+ON DUPLICATE KEY UPDATE
+    control_status = VALUES(control_status),
+    last_update_ts = VALUES(last_update_ts),
+    comment = VALUES(comment);
