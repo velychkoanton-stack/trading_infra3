@@ -1,4 +1,4 @@
-timezone=UTC
+timezone=Europe/Amsterdam
 mysql_api_file=api_mysql_main.txt
 bybit_api_file=api_bybit_main.txt
 

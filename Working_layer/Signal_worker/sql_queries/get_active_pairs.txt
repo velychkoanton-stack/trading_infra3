@@ -15,12 +15,6 @@ SELECT
     ps.level_180,
     ps.quarantine_until
 FROM signal_table st
-INNER JOIN pair_state ps
+LEFT JOIN pair_state ps
     ON ps.uuid = st.uuid
-WHERE
-    ps.level_30 <> 'quarantine'
-    AND ps.level_180 <> 'quarantine'
-    AND (ps.quarantine_until IS NULL OR ps.quarantine_until <= NOW(6))
-    AND ps.adf < %(adf_threshold)s
-    AND ps.p_value < %(p_value_threshold)s
 ORDER BY st.uuid;

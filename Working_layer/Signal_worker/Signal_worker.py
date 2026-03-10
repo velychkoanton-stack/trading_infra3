@@ -173,12 +173,15 @@ class SignalWorker:
         asset1_5m_vol, asset1_1h_vol = self._extract_liquidity(merged[f"{asset_1}_volume"])
         asset2_5m_vol, asset2_1h_vol = self._extract_liquidity(merged[f"{asset_2}_volume"])
 
+        countable_signal_source = self._pair_is_countable_signal_source(pair_row)
+
         new_signal_this_month, new_signal_prev_month, signal_hit = self._resolve_monthly_signal_counts(
             prev_last_z_score=prev_last_z_score,
             current_last_z_score=z_summary["last_z_score"],
             signal_this_month=signal_this_month,
             signal_prev_month=signal_prev_month,
             signal_last_update_ts=signal_last_update_ts,
+            allow_signal_count=countable_signal_source,
         )
 
         self.logger.info(
@@ -387,6 +390,7 @@ class SignalWorker:
         signal_this_month: int,
         signal_prev_month: int,
         signal_last_update_ts: Any,
+        allow_signal_count: bool,
     ) -> tuple[int, int, int]:
         current_month = datetime.utcnow().month
         current_year = datetime.utcnow().year
@@ -450,6 +454,35 @@ class SignalWorker:
             raise ValueError(f"Rules file is empty: {file_path}")
 
         return rules
+
+
+def _pair_is_countable_signal_source(self, pair_row: dict[str, Any]) -> bool:
+    adf = pair_row.get("adf")
+    p_value = pair_row.get("p_value")
+    level_30 = pair_row.get("level_30")
+    level_180 = pair_row.get("level_180")
+    quarantine_until = pair_row.get("quarantine_until")
+
+    if adf is None or p_value is None:
+        return False
+
+    if float(adf) >= self.adf_threshold:
+        return False
+
+    if float(p_value) >= self.p_value_threshold:
+        return False
+
+    if str(level_30 or "").lower() == "quarantine":
+        return False
+
+    if str(level_180 or "").lower() == "quarantine":
+        return False
+
+    q_until = self._coerce_datetime(quarantine_until)
+    if q_until is not None and q_until > datetime.utcnow():
+        return False
+
+    return True
 
 
 if __name__ == "__main__":
