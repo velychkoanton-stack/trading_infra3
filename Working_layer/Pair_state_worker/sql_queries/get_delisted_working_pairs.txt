@@ -1,0 +1,14 @@
+SELECT
+    st.uuid,
+    st.asset_1,
+    st.asset_2
+FROM signal_table st
+LEFT JOIN asset_universe a1
+    ON a1.symbol = st.asset_1
+LEFT JOIN asset_universe a2
+    ON a2.symbol = st.asset_2
+WHERE
+    a1.symbol IS NULL
+    OR a2.symbol IS NULL
+    OR a1.exchange_status = 'delisted'
+    OR a2.exchange_status = 'delisted';

@@ -1,0 +1,15 @@
+SELECT
+    id,
+    uuid,
+    open_dt,
+    close_dt,
+    pnl,
+    pnl_pers,
+    bot_id,
+    open_cond,
+    close_cond,
+    closed_by,
+    pos_val
+FROM trade_res
+WHERE uuid IN ({uuid_placeholders})
+ORDER BY uuid, open_dt, id;

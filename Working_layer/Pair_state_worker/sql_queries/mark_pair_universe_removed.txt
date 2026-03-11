@@ -1,0 +1,5 @@
+UPDATE pair_universe
+SET
+    status = 'removed',
+    dt_status_change = %(dt_status_change)s
+WHERE uuid = %(uuid)s;

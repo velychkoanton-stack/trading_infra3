@@ -1,0 +1,2 @@
+DELETE FROM signal_table
+WHERE uuid = %(uuid)s;

@@ -1,0 +1,9 @@
+SELECT
+    uuid,
+    asset_1,
+    asset_2,
+    best_tp,
+    best_sl
+FROM pair_universe
+WHERE status = 'candidate'
+ORDER BY uuid;

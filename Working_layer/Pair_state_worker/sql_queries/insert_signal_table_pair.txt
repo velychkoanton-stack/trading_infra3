@@ -1,0 +1,25 @@
+INSERT INTO signal_table (
+    uuid,
+    asset_1,
+    asset_2,
+    tp,
+    sl,
+    last_update_ts,
+    signal_this_month,
+    signal_prev_month
+)
+VALUES (
+    %(uuid)s,
+    %(asset_1)s,
+    %(asset_2)s,
+    %(tp)s,
+    %(sl)s,
+    %(last_update_ts)s,
+    0,
+    0
+)
+ON DUPLICATE KEY UPDATE
+    asset_1 = VALUES(asset_1),
+    asset_2 = VALUES(asset_2),
+    tp = VALUES(tp),
+    sl = VALUES(sl);

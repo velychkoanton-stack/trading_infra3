@@ -1,0 +1,2 @@
+DELETE FROM pair_state
+WHERE uuid = %(uuid)s;

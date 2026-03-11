@@ -1,0 +1,10 @@
+INSERT INTO pair_state (
+    uuid,
+    last_update_ts
+)
+VALUES (
+    %(uuid)s,
+    %(last_update_ts)s
+)
+ON DUPLICATE KEY UPDATE
+    uuid = VALUES(uuid);

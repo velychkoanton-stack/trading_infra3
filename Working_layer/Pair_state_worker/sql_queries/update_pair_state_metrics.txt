@@ -1,0 +1,32 @@
+UPDATE pair_state
+SET
+    adf = %(adf)s,
+    p_value = %(p_value)s,
+    hurst = %(hurst)s,
+    hl = %(hl)s,
+    spread_skew = %(spread_skew)s,
+    spread_kurt = %(spread_kurt)s,
+    beta = %(beta)s,
+    beta_norm = %(beta_norm)s,
+    hl_spread_med = %(hl_spread_med)s,
+    last_spread = %(last_spread)s,
+
+    win_rate_180 = %(win_rate_180)s,
+    rew_risk_180 = %(rew_risk_180)s,
+    num_trades_180 = %(num_trades_180)s,
+    total_pnl_180 = %(total_pnl_180)s,
+    expect_180 = %(expect_180)s,
+    level_180 = %(level_180)s,
+
+    win_rate_30 = %(win_rate_30)s,
+    rew_risk_30 = %(rew_risk_30)s,
+    num_trades_30 = %(num_trades_30)s,
+    total_pnl_30 = %(total_pnl_30)s,
+    expect_30 = %(expect_30)s,
+    level_30 = %(level_30)s,
+
+    quarantine_until = %(quarantine_until)s,
+    quarantine_reason = %(quarantine_reason)s,
+    activity_score = %(activity_score)s,
+    last_update_ts = %(last_update_ts)s
+WHERE uuid = %(uuid)s;

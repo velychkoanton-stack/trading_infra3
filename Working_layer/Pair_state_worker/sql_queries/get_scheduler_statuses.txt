@@ -1,0 +1,7 @@
+SELECT
+    worker_id,
+    control_status,
+    comment,
+    last_update_ts
+FROM scheduler
+WHERE worker_id IN ('GLOBAL', %(worker_id)s);

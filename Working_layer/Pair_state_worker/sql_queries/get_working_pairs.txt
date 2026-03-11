@@ -1,0 +1,9 @@
+SELECT
+    st.uuid,
+    st.asset_1,
+    st.asset_2,
+    ps.id AS pair_state_id
+FROM signal_table st
+LEFT JOIN pair_state ps
+    ON ps.uuid = st.uuid
+ORDER BY st.uuid;
