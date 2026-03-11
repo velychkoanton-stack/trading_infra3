@@ -269,46 +269,60 @@ class SignalWorker:
             "_signal_hit": signal_hit,
         }
 
+    def _keep_closed_candles_only(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Remove still-open current candle if present.
+
+        Rule:
+        keep rows with ts strictly less than last closed 5m boundary.
+        """
+        if df.empty:
+            return df
+
+        last_closed_boundary = self._get_last_closed_5m_boundary(datetime.now(timezone.utc))
+        last_closed_ts_ms = int(last_closed_boundary.timestamp() * 1000)
+
+        closed_df = df[df["ts"] < last_closed_ts_ms].copy()
+        closed_df = closed_df.sort_values("ts").drop_duplicates(subset=["ts"], keep="last").reset_index(drop=True)
+        return closed_df
+
+
     def _ensure_symbol_dataset(self, symbol: str) -> pd.DataFrame:
-        if not parquet_exists(symbol):
-            self.logger.info("Parquet missing, full refresh | symbol=%s", symbol)
-            rows = fetch_ohlcv_with_retry(
-                bybit_client=self.bybit,
-                symbol=symbol,
-                timeframe=self.timeframe,
-                limit=self.lookback_candles,
+        """
+        Full refresh each cycle:
+        - fetch latest candles from Bybit
+        - keep only CLOSED candles
+        - sort by ts
+        - drop duplicates
+        - keep last lookback_candles rows
+        - overwrite parquet
+        """
+        fetch_limit = self.lookback_candles + 5
+
+        rows = fetch_ohlcv_with_retry(
+            bybit_client=self.bybit,
+            symbol=symbol,
+            timeframe=self.timeframe,
+            limit=fetch_limit,
+        )
+
+        fresh_df = pd.DataFrame(rows, columns=["ts", "open", "high", "low", "close", "volume"])
+        fresh_df = self._normalize_ohlcv_frame(fresh_df)
+        fresh_df = self._keep_closed_candles_only(fresh_df)
+        fresh_df = fresh_df.tail(self.lookback_candles).reset_index(drop=True)
+
+        if len(fresh_df) < self.lookback_candles:
+            raise ValueError(
+                f"Fetched rows below required lookback for symbol={symbol}. "
+                f"got={len(fresh_df)}, required={self.lookback_candles}"
             )
-            replace_symbol_ohlcv_parquet(symbol, rows)
-            return self._normalize_ohlcv_frame(read_symbol_ohlcv_parquet(symbol))
+
+        replace_symbol_ohlcv_parquet(symbol, fresh_df.values.tolist())
 
         df = read_symbol_ohlcv_parquet(symbol).copy()
         df = self._normalize_ohlcv_frame(df)
-
-        if len(df) < self.full_refresh_if_rows_below:
-            self.logger.info(
-                "Parquet below minimum rows, full refresh | symbol=%s | rows=%s",
-                symbol,
-                len(df),
-            )
-            rows = fetch_ohlcv_with_retry(
-                bybit_client=self.bybit,
-                symbol=symbol,
-                timeframe=self.timeframe,
-                limit=self.lookback_candles,
-            )
-            replace_symbol_ohlcv_parquet(symbol, rows)
-            return self._normalize_ohlcv_frame(read_symbol_ohlcv_parquet(symbol))
-
-        if self._needs_incremental_refresh(df):
-            rows = fetch_ohlcv_with_retry(
-                bybit_client=self.bybit,
-                symbol=symbol,
-                timeframe=self.timeframe,
-                limit=self.incremental_fetch_limit,
-            )
-            merge_symbol_ohlcv_parquet(symbol, rows)
-            df = read_symbol_ohlcv_parquet(symbol).copy()
-            df = self._normalize_ohlcv_frame(df)
+        df = self._keep_closed_candles_only(df)
+        df = df.tail(self.lookback_candles).reset_index(drop=True)
 
         return df
 
