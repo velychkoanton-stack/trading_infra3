@@ -46,7 +46,7 @@ class PairStateWorker:
 
         self.rules = self._load_rules_file(self.rules_path)
 
-        self.get_missing_pair_state_rows_sql = load_sql_file(self.sql_dir / "get_missing_pair_state_rows.txt")
+        
         self.mysql_api_file = self.rules.get("mysql_api_file", "api_mysql_main.txt")
         self.worker_name = self.rules.get("worker_name", "pair_state_worker")
         self.loop_minutes = int(self.rules.get("loop_minutes", "15"))
@@ -66,6 +66,7 @@ class PairStateWorker:
         self.get_scheduler_statuses_sql = load_sql_file(self.sql_dir / "get_scheduler_statuses.txt")
         self.get_working_pairs_sql = load_sql_file(self.sql_dir / "get_working_pairs.txt")
         self.get_delisted_working_pairs_sql = load_sql_file(self.sql_dir / "get_delisted_working_pairs.txt")
+        self.get_missing_pair_state_rows_sql = load_sql_file(self.sql_dir / "get_missing_pair_state_rows.txt")
         self.delete_signal_table_pair_sql = load_sql_file(self.sql_dir / "delete_signal_table_pair.txt")
         self.delete_pair_state_pair_sql = load_sql_file(self.sql_dir / "delete_pair_state_pair.txt")
         self.get_candidate_pairs_sql = load_sql_file(self.sql_dir / "get_candidate_pairs.txt")
@@ -186,7 +187,7 @@ class PairStateWorker:
 
     def _sync_missing_pair_state_rows(self) -> None:
         rows = fetch_all(
-            sql=self.get_missing_pair_state_rows,
+            sql=self.get_missing_pair_state_rows_sql,
             api_file_name=self.mysql_api_file,
         )
 
@@ -203,7 +204,7 @@ class PairStateWorker:
         ]
 
         execute_many(
-            sql=self.insert_pair_state_pair,
+            sql=self.insert_pair_state_pair_sql,
             api_file_name=self.mysql_api_file,
             params_seq=params_seq,
         )
