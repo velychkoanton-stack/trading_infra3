@@ -353,8 +353,14 @@ class PairStateWorker:
         df_2 = symbol_cache[asset_2]
 
         aligned = align_close_series(df_1, df_2, ts_column="ts", close_column="close")
-        if len(aligned) < self.lookback_candles:
-            raise ValueError(f"Not enough aligned candles for uuid={uuid}")
+        aligned_len = len(aligned)
+
+        if aligned_len < self.lookback_candles:
+            raise ValueError(
+                f"Not enough aligned candles for uuid={uuid}. "
+                f"aligned_len={aligned_len}, required={self.lookback_candles}, "
+                f"asset_1={asset_1}, asset_2={asset_2}"
+    )
 
         beta = calculate_beta_ols(
             price_1=aligned["close_1"],

@@ -21,3 +21,5 @@ removal_min_trades=25
 
 use_log_prices_for_beta=1
 use_log_prices_for_adf=1
+
+min_aligned_candles=800
