@@ -32,12 +32,27 @@ worker.asset_worker.daily_window_end=01:30
 worker.asset_worker.daily_window_status=RUNNING
 worker.asset_worker.daily_outside_status=SLEEP
 
-worker.pair_worker.enabled=1
-worker.pair_worker.default_status=RUNNING
-worker.pair_worker.weekend_mode=RUNNING
-worker.pair_worker.daily_sl_pct=NONE
-worker.pair_worker.heartbeat_sec=300
-worker.pair_worker.loop_sec=300
+worker.pair_worker_a.enabled=1
+worker.pair_worker_a.default_status=SLEEP
+worker.pair_worker_a.weekend_mode=SLEEP
+worker.pair_worker_a.daily_sl_pct=NONE
+worker.pair_worker_a.heartbeat_sec=300
+worker.pair_worker_a.loop_sec=300
+worker.pair_worker_a.daily_window_start=02:00
+worker.pair_worker_a.daily_window_end=03:00
+worker.pair_worker_a.daily_window_status=RUNNING
+worker.pair_worker_a.daily_outside_status=SLEEP
+
+worker.pair_worker_b.enabled=1
+worker.pair_worker_b.default_status=RUNNING
+worker.pair_worker_b.weekend_mode=RUNNING
+worker.pair_worker_b.daily_sl_pct=NONE
+worker.pair_worker_b.heartbeat_sec=300
+worker.pair_worker_b.loop_sec=300
+worker.pair_worker_b.daily_window_start=00:00
+worker.pair_worker_b.daily_window_end=04:00
+worker.pair_worker_b.daily_window_status=SLEEP
+worker.pair_worker_b.daily_outside_status=RUNNING
 
 worker.signal_worker.enabled=1
 worker.signal_worker.default_status=RUNNING
