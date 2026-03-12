@@ -1,0 +1,28 @@
+UPDATE pair_universe
+SET
+    adf = NULL,
+    p_value = NULL,
+    hurst = NULL,
+    hl = NULL,
+    spread_skew = NULL,
+    spread_kurt = NULL,
+    beta = NULL,
+    beta_norm = NULL,
+    dt_stat_tested = NULL,
+    stat_test_score = NULL,
+    bt_final_equity = NULL,
+    win_rate = NULL,
+    risk_reward_ratio = NULL,
+    num_trades = NULL,
+    exit_mean_reverted = NULL,
+    exit_hl_coint_lst = NULL,
+    best_tp = NULL,
+    best_sl = NULL,
+    best_beta = NULL,
+    dt_backtest_tested = NULL,
+    backtest_score = NULL,
+    stat_state = 'new',
+    bt_state = 'fail'
+WHERE status = 'forbidden'
+  AND bt_state = 'fail'
+  AND updated_at < NOW() - INTERVAL {pair_retention_days_forbidden_fail} DAY;

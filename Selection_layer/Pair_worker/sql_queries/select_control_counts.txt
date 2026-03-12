@@ -1,0 +1,5 @@
+SELECT
+    SUM(CASE WHEN status IN ('in_main_table', 'quarantine') THEN 1 ELSE 0 END) AS working_count,
+    SUM(CASE WHEN status = 'candidate' THEN 1 ELSE 0 END) AS candidate_count,
+    SUM(CASE WHEN bt_state = 'pending' THEN 1 ELSE 0 END) AS bt_pending_count
+FROM pair_universe;

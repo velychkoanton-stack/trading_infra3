@@ -1,0 +1,32 @@
+SELECT
+    id,
+    uuid,
+    asset_1,
+    asset_2,
+    liq_5min_mean,
+    liq_1h_mean,
+    status,
+    beta,
+    beta_norm,
+    adf,
+    p_value,
+    hurst,
+    hl,
+    spread_skew,
+    spread_kurt,
+    stat_test_score,
+    stat_state,
+    bt_state,
+    dt_stat_tested,
+    dt_backtest_tested
+FROM pair_universe
+WHERE stat_state = 'done'
+  AND bt_state = 'pending'
+  AND dt_stat_tested IS NOT NULL
+  AND dt_stat_tested >= NOW(6) - INTERVAL {max_stat_age_days} DAY
+ORDER BY
+    dt_stat_tested DESC,
+    stat_test_score DESC,
+    COALESCE(dt_backtest_tested, '2000-01-01 00:00:00') ASC,
+    id ASC
+LIMIT {bt_batch_size};

@@ -22,5 +22,5 @@ VALUES
     NOW(),
     %s,
     'new',
-    'pending'
+    'fail'
 );

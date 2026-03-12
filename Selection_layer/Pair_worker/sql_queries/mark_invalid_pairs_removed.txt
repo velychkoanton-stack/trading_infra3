@@ -1,0 +1,20 @@
+UPDATE pair_universe pu
+LEFT JOIN asset_universe a1
+    ON pu.asset_1 = a1.symbol
+LEFT JOIN asset_universe a2
+    ON pu.asset_2 = a2.symbol
+SET
+    pu.status = 'removed',
+    pu.dt_status_change = NOW(6)
+WHERE
+    (
+        a1.symbol IS NULL
+        OR a1.exchange_status <> 'listed'
+        OR a1.pipe_status <> 'tested'
+    )
+    OR
+    (
+        a2.symbol IS NULL
+        OR a2.exchange_status <> 'listed'
+        OR a2.pipe_status <> 'tested'
+    );
