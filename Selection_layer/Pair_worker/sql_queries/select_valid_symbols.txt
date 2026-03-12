@@ -1,0 +1,5 @@
+SELECT
+    symbol
+FROM asset_universe
+WHERE exchange_status = 'listed'
+  AND pipe_status = 'tested';
