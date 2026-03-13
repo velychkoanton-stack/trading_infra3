@@ -8,6 +8,8 @@ data/parquet_db/
 
 API/api_bybit_main.txt
 API/api_mysql_main.txt
+API/api_telegram_level_1.txt
+API/api_telegram_level_2.txt
 API/api_telegram_main.txt
 
 .env
