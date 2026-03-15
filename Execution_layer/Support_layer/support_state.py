@@ -269,10 +269,28 @@ class SupportState:
             self.subscribed_symbols.discard(symbol)
             self.market_prices.pop(symbol, None)
             self.timestamps["public_price_by_symbol"].pop(symbol, None)
+
             if symbol in self.positions:
                 self.positions[symbol]["live_market_price"] = None
                 self.positions[symbol]["live_unrealized_pnl"] = None
                 self.positions[symbol]["live_recalc_time_local"] = None
+
+    def cleanup_orphan_price_state(self) -> None:
+        """
+        Remove public price cache/timestamps for symbols that are no longer subscribed
+        and no longer open.
+        """
+        with self._lock:
+            valid_symbols = self.subscribed_symbols | set(self.positions.keys())
+
+            for symbol in list(self.market_prices.keys()):
+                if symbol not in valid_symbols:
+                    self.market_prices.pop(symbol, None)
+
+            for symbol in list(self.timestamps["public_price_by_symbol"].keys()):
+                if symbol not in valid_symbols:
+                    self.timestamps["public_price_by_symbol"].pop(symbol, None)
+
 
     def get_account_snapshot(self) -> Dict[str, Any]:
         with self._lock:
@@ -354,4 +372,5 @@ class SupportState:
                 "private_stream_stale": private_stale,
                 "public_stream_stale": public_stale,
                 "stale_symbols": sorted(stale_symbols),
+                "tracked_public_symbols": sorted(self.subscribed_symbols),
             }

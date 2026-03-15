@@ -60,6 +60,12 @@ class SupportConnection:
         self._stop_event = threading.Event()
         self._subscription_manager_thread: Optional[threading.Thread] = None
 
+        self._watchdog_thread: Optional[threading.Thread] = None
+        self._reconnect_lock = threading.Lock()
+        self._reconnect_in_progress = False
+
+
+
     @staticmethod
     def _to_float(value: Any) -> Optional[float]:
         try:
@@ -203,6 +209,7 @@ class SupportConnection:
         self._start_private_ws()
         self._start_public_ws()
         self._start_subscription_manager()
+        self._start_watchdog()
 
     def stop(self) -> None:
         self._stop_event.set()
@@ -264,6 +271,7 @@ class SupportConnection:
             try:
                 self._sync_public_subscriptions()
                 self.state.remove_closed_orders()
+                self.state.cleanup_orphan_price_state()
             except Exception as exc:
                 logger.warning("%s | subscription sync failed: %s", self.summary_log_prefix, exc)
             time.sleep(1.0)
@@ -441,3 +449,75 @@ class SupportConnection:
                 )
         except Exception as exc:
             logger.warning("%s | execution handler error: %s", self.summary_log_prefix, exc)
+            
+    def _start_watchdog(self) -> None:
+        self._watchdog_thread = threading.Thread(
+            target=self._watchdog_loop,
+            name="support-watchdog",
+            daemon=True,
+        )
+        self._watchdog_thread.start()
+    
+    def _watchdog_loop(self) -> None:
+        while not self._stop_event.is_set():
+            try:
+                self.state.cleanup_orphan_price_state()
+
+                health = self.state.get_health_snapshot(
+                    private_stale_sec=60,
+                    public_stale_sec=20,
+                )
+
+                if health["private_stream_stale"] or health["public_stream_stale"]:
+                    logger.warning(
+                        "%s | watchdog detected stale stream | private=%s public=%s stale_symbols=%s",
+                        self.summary_log_prefix,
+                        health["private_stream_stale"],
+                        health["public_stream_stale"],
+                        health["stale_symbols"],
+                    )
+                    self._restart_streams()
+
+            except Exception as exc:
+                logger.warning("%s | watchdog loop failed: %s", self.summary_log_prefix, exc)
+
+            time.sleep(5.0)
+
+    def _restart_streams(self) -> None:
+        if not self._reconnect_lock.acquire(blocking=False):
+            return
+
+        try:
+            if self._reconnect_in_progress:
+                return
+
+            self._reconnect_in_progress = True
+            logger.warning("%s | restarting support streams", self.summary_log_prefix)
+
+            try:
+                if self.private_ws is not None and hasattr(self.private_ws, "exit"):
+                    self.private_ws.exit()
+            except Exception as exc:
+                logger.warning("%s | private ws restart-exit failed: %s", self.summary_log_prefix, exc)
+
+            try:
+                if self.public_ws is not None and hasattr(self.public_ws, "exit"):
+                    self.public_ws.exit()
+            except Exception as exc:
+                logger.warning("%s | public ws restart-exit failed: %s", self.summary_log_prefix, exc)
+
+            self.private_ws = None
+            self.public_ws = None
+
+            time.sleep(2.0)
+
+            # Re-bootstrap current truth from REST, then rebuild streams
+            self.bootstrap_rest()
+            self._start_private_ws()
+            self._start_public_ws()
+
+            logger.warning("%s | support streams restarted", self.summary_log_prefix)
+
+        finally:
+            self._reconnect_in_progress = False
+            self._reconnect_lock.release()
