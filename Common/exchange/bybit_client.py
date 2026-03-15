@@ -17,13 +17,17 @@ RETRYABLE_EXCEPTIONS = (
 )
 
 
-def create_bybit_client(api_file_name: str) -> ccxt.bybit:
+def create_bybit_client(api_file_name: str, demo: bool = False) -> ccxt.bybit:
     """
     Create Bybit CCXT client from API txt file.
 
     Expected API file format:
     API_KEY=...
     API_SECRET=...
+
+    Args:
+        api_file_name: file name resolved via get_api_file_path()
+        demo: if True, enable Bybit demo trading mode
     """
     api_path: Path = get_api_file_path(api_file_name)
     api_config = load_api_file(api_path)
@@ -39,8 +43,16 @@ def create_bybit_client(api_file_name: str) -> ccxt.bybit:
             "options": {
                 "defaultType": "swap",
             },
+            "timeout": 20000,
         }
     )
+
+    if demo:
+        if hasattr(client, "enable_demo_trading"):
+            try:
+                client.enable_demo_trading(True)
+            except Exception:
+                pass
 
     return client
 
