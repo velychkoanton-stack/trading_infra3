@@ -113,8 +113,8 @@ class ExecutorBase:
         last_price_2 = 1.0
 
         try:
-            ticker_1 = self.order_manager.client.fetch_ticker(f"{candidate.asset_1}/USDT:USDT")
-            ticker_2 = self.order_manager.client.fetch_ticker(f"{candidate.asset_2}/USDT:USDT")
+            ticker_1 = self.order_manager.client.fetch_ticker(candidate.asset_1)
+            ticker_2 = self.order_manager.client.fetch_ticker(candidate.asset_2)
 
             last_price_1 = float(ticker_1.get("last") or 1.0)
             last_price_2 = float(ticker_2.get("last") or 1.0)
@@ -174,10 +174,10 @@ class ExecutorBase:
             trade_res_id=trade_res_id,
             asset_1=candidate.asset_1,
             asset_2=candidate.asset_2,
-            ccxt_symbol_1=f"{candidate.asset_1}/USDT:USDT",
-            ccxt_symbol_2=f"{candidate.asset_2}/USDT:USDT",
-            pybit_symbol_1=ccxt_symbol_to_pybit_symbol(f"{candidate.asset_1}/USDT:USDT"),
-            pybit_symbol_2=ccxt_symbol_to_pybit_symbol(f"{candidate.asset_2}/USDT:USDT"),
+            ccxt_symbol_1=candidate.asset_1,
+            ccxt_symbol_2=candidate.asset_2,
+            pybit_symbol_1=ccxt_symbol_to_pybit_symbol(candidate.asset_1),
+            pybit_symbol_2=ccxt_symbol_to_pybit_symbol(candidate.asset_2),
             side_1=side_1,
             side_2=side_2,
             open_ts=datetime.now(),

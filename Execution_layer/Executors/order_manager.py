@@ -130,8 +130,8 @@ class OrderManager:
         sizing: SizingResult,
     ) -> OrderExecutionResult:
 
-        symbol_1 = candidate.asset_1 + "/USDT:USDT"
-        symbol_2 = candidate.asset_2 + "/USDT:USDT"
+        symbol_1 = candidate.asset_1
+        symbol_2 = candidate.asset_2
 
         order_ids: list[str] = []
 
