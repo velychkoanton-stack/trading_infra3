@@ -467,8 +467,8 @@ class SupportConnection:
 
                 health = self.state.get_health_snapshot(
                     private_stale_sec=60,
-                    public_stale_sec=20,
-                    public_symbol_grace_sec=20,
+                    public_stale_sec=45,
+                    public_symbol_grace_sec=30,
                 )
 
                 tracked_symbols = health.get("tracked_public_symbols", [])
