@@ -276,7 +276,7 @@ class ExecutorBase:
                 result.message,
             )
 
-        deleted_rows = self.repositories.delete_asset_locks(
+        deleted_locks = self.repositories.delete_asset_locks(
             bot_id=self.bot_config.bot_id,
             uuid=record.uuid,
         )
@@ -285,7 +285,19 @@ class ExecutorBase:
             "unlock result uuid=%s bot_id=%s deleted_rows=%s",
             record.uuid,
             self.bot_config.bot_id,
-            deleted_rows,
+            deleted_locks,
+        )
+
+        deleted_pos_value = self.repositories.delete_position_value(
+            bot_id=self.bot_config.bot_id,
+            uuid=record.uuid,
+        )
+
+        self.logger.warning(
+            "position_value cleanup uuid=%s bot_id=%s deleted_rows=%s",
+            record.uuid,
+            self.bot_config.bot_id,
+            deleted_pos_value,
         )
 
         self.shared_state.remove_open_pair(record.uuid)
