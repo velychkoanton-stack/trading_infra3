@@ -1,0 +1,14 @@
+INSERT INTO trade_res (
+    uuid,
+    open_dt,
+    bot_id,
+    open_cond,
+    pos_val
+)
+VALUES (
+    %(uuid)s,
+    NOW(6),
+    %(bot_id)s,
+    %(open_cond)s,
+    %(pos_val)s
+)

@@ -1,0 +1,8 @@
+UPDATE trade_res
+SET
+    close_dt = NOW(6),
+    pnl = %(pnl)s,
+    closed_by = %(closed_by)s,
+    close_cond = %(close_cond)s,
+    pnl_pers = %(pnl_pers)s
+WHERE id = %(trade_id)s

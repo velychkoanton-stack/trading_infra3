@@ -1,0 +1,12 @@
+INSERT INTO asset_locks (
+    bot_id,
+    asset,
+    uuid,
+    created_ts
+)
+VALUES (
+    %(bot_id)s,
+    %(asset)s,
+    %(uuid)s,
+    NOW(6)
+)

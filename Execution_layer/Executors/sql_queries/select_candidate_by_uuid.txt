@@ -1,0 +1,42 @@
+SELECT
+    s.uuid,
+    s.asset_1,
+    s.asset_2,
+    s.tp,
+    s.sl,
+    s.last_z_score,
+    s.max_z_score,
+    s.min_z_score,
+    s.asset1_5m_vol,
+    s.asset1_1h_vol,
+    s.asset2_5m_vol,
+    s.asset2_1h_vol,
+    s.signal_this_month,
+    s.signal_prev_month,
+    s.last_update_ts AS signal_last_update_ts,
+
+    p.adf,
+    p.p_value,
+    p.hurst,
+    p.hl,
+    p.spread_skew,
+    p.spread_kurt,
+    p.beta,
+    p.beta_norm,
+    p.hl_spread_med,
+    p.last_spread,
+    p.win_rate_180,
+    p.rew_risk_180,
+    p.num_trades_180,
+    p.total_pnl_180,
+    p.expect_180,
+    p.level_180,
+    p.quarantine_until,
+    p.quarantine_reason,
+    p.last_update_ts AS pair_state_last_update_ts
+
+FROM signal_table s
+JOIN pair_state p
+    ON s.uuid = p.uuid
+WHERE s.uuid = %s
+LIMIT 1

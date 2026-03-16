@@ -1,0 +1,403 @@
+2026-03-16 13:09:22 | INFO | bot_L1_01 | ExecutorRuntime built bot_id=bot_L1_01
+2026-03-16 13:09:22 | INFO | bot_L1_01 | ExecutorRuntime starting bot_id=bot_L1_01
+2026-03-16 13:09:22 | INFO | bot_L1_01 | ControlWorker started bot_id=bot_L1_01
+2026-03-16 13:09:22 | INFO | bot_L1_01 | ExecutorWorker starting worker_id=bot_L1_01_exec_01 startup_delay=1.42
+2026-03-16 13:09:22 | INFO | bot_L1_01 | ExecutorWorker starting worker_id=bot_L1_01_exec_02 startup_delay=6.22
+2026-03-16 13:09:22 | INFO | bot_L1_01 | ExecutorWorker starting worker_id=bot_L1_01_exec_03 startup_delay=10.70
+2026-03-16 13:09:22 | INFO | bot_L1_01 | ExecutorRuntime started bot_id=bot_L1_01 executor_threads=3
+2026-03-16 13:09:24 | ERROR | bot_L1_01 | ControlWorker cycle failed
+Traceback (most recent call last):
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 795, in open_connection
+    self.sock.connect(sockaddr)
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\bot\new_infra\Execution_layer\Executors\control_worker.py", line 67, in run_loop
+    self.run_cycle()
+  File "C:\bot\new_infra\Execution_layer\Executors\control_worker.py", line 78, in run_cycle
+    self.write_heartbeat(runtime_status="RUNNING", comment="control_worker_ok")
+  File "C:\bot\new_infra\Execution_layer\Executors\control_worker.py", line 88, in write_heartbeat
+    write_heartbeat(
+  File "C:\bot\new_infra\Common\db\heartbeat_writer.py", line 66, in write_heartbeat
+    return execute(
+           ^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 75, in execute
+    return run_with_deadlock_retry(_operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\deadlock_retry.py", line 45, in run_with_deadlock_retry
+    return func()
+           ^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 69, in _operation
+    with closing(create_connection(api_file_name)) as conn:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_connect.py", line 56, in create_connection
+    return mysql.connector.connect(**conn_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\pooling.py", line 323, in connect
+    return MySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 185, in __init__
+    self.connect(**kwargs)
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 411, in _open_connection
+    raise err
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 382, in _open_connection
+    self._socket.open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 806, in open_connection
+    raise InterfaceError(
+mysql.connector.errors.InterfaceError: 2003: Can't connect to MySQL server on 'localhost:3306' (Errno 10061: No connection could be made because the target machine actively refused it)
+2026-03-16 13:09:26 | ERROR | bot_L1_01 | ExecutorWorker failed worker_id=bot_L1_01_exec_01
+Traceback (most recent call last):
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 795, in open_connection
+    self.sock.connect(sockaddr)
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\bot\new_infra\Execution_layer\Executors\executor_worker.py", line 73, in run_loop
+    status = self.repositories.get_scheduler_status(self.bot_id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Execution_layer\Executors\repositories.py", line 143, in get_scheduler_status
+    row = fetch_one(
+          ^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 53, in fetch_one
+    return run_with_deadlock_retry(_operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\deadlock_retry.py", line 45, in run_with_deadlock_retry
+    return func()
+           ^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 46, in _operation
+    with closing(create_connection(api_file_name)) as conn:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_connect.py", line 56, in create_connection
+    return mysql.connector.connect(**conn_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\pooling.py", line 323, in connect
+    return MySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 185, in __init__
+    self.connect(**kwargs)
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 411, in _open_connection
+    raise err
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 382, in _open_connection
+    self._socket.open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 806, in open_connection
+    raise InterfaceError(
+mysql.connector.errors.InterfaceError: 2003: Can't connect to MySQL server on 'localhost:3306' (Errno 10061: No connection could be made because the target machine actively refused it)
+2026-03-16 13:09:29 | INFO | bot_L1_01 | ExecutorRuntime stopping bot_id=bot_L1_01
+2026-03-16 13:09:30 | INFO | bot_L1_01 | ExecutorRuntime stopped bot_id=bot_L1_01
+2026-03-16 13:09:31 | ERROR | bot_L1_01 | ExecutorWorker failed worker_id=bot_L1_01_exec_02
+Traceback (most recent call last):
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 795, in open_connection
+    self.sock.connect(sockaddr)
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\bot\new_infra\Execution_layer\Executors\executor_worker.py", line 73, in run_loop
+    status = self.repositories.get_scheduler_status(self.bot_id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Execution_layer\Executors\repositories.py", line 143, in get_scheduler_status
+    row = fetch_one(
+          ^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 53, in fetch_one
+    return run_with_deadlock_retry(_operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\deadlock_retry.py", line 45, in run_with_deadlock_retry
+    return func()
+           ^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 46, in _operation
+    with closing(create_connection(api_file_name)) as conn:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_connect.py", line 56, in create_connection
+    return mysql.connector.connect(**conn_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\pooling.py", line 323, in connect
+    return MySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 185, in __init__
+    self.connect(**kwargs)
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 411, in _open_connection
+    raise err
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 382, in _open_connection
+    self._socket.open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 806, in open_connection
+    raise InterfaceError(
+mysql.connector.errors.InterfaceError: 2003: Can't connect to MySQL server on 'localhost:3306' (Errno 10061: No connection could be made because the target machine actively refused it)
+2026-03-16 13:09:33 | INFO | bot_L1_01 | ExecutorRuntime stopping bot_id=bot_L1_01
+2026-03-16 13:09:33 | INFO | bot_L1_01 | ExecutorRuntime stopped bot_id=bot_L1_01
+2026-03-16 13:09:33 | INFO | bot_L1_01 | ExecutorWorker stopped worker_id=bot_L1_01_exec_03
+2026-03-16 13:09:56 | INFO | bot_L1_01 | ExecutorWorker stopped worker_id=bot_L1_01_exec_01
+2026-03-16 13:10:01 | INFO | bot_L1_01 | ExecutorWorker stopped worker_id=bot_L1_01_exec_02
+2026-03-16 13:10:02 | INFO | bot_L1_01 | ExecutorRuntime stopping bot_id=bot_L1_01
+2026-03-16 13:10:02 | INFO | bot_L1_01 | ExecutorRuntime stopped bot_id=bot_L1_01
+2026-03-16 13:10:49 | INFO | bot_L1_01 | ExecutorRuntime stopping bot_id=bot_L1_01
+2026-03-16 13:10:49 | INFO | bot_L1_01 | ExecutorRuntime stopped bot_id=bot_L1_01
+2026-03-16 13:14:05 | INFO | bot_L1_01 | ExecutorRuntime built bot_id=bot_L1_01
+2026-03-16 13:14:05 | INFO | bot_L1_01 | ExecutorRuntime starting bot_id=bot_L1_01
+2026-03-16 13:14:05 | INFO | bot_L1_01 | ControlWorker started bot_id=bot_L1_01
+2026-03-16 13:14:05 | INFO | bot_L1_01 | ExecutorWorker starting worker_id=bot_L1_01_exec_01 startup_delay=0.41
+2026-03-16 13:14:05 | INFO | bot_L1_01 | ExecutorWorker starting worker_id=bot_L1_01_exec_02 startup_delay=5.38
+2026-03-16 13:14:05 | INFO | bot_L1_01 | ExecutorWorker starting worker_id=bot_L1_01_exec_03 startup_delay=10.17
+2026-03-16 13:14:05 | INFO | bot_L1_01 | ExecutorRuntime started bot_id=bot_L1_01 executor_threads=3
+2026-03-16 13:14:07 | ERROR | bot_L1_01 | ControlWorker cycle failed
+Traceback (most recent call last):
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 795, in open_connection
+    self.sock.connect(sockaddr)
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\bot\new_infra\Execution_layer\Executors\control_worker.py", line 67, in run_loop
+    self.run_cycle()
+  File "C:\bot\new_infra\Execution_layer\Executors\control_worker.py", line 78, in run_cycle
+    self.write_heartbeat(runtime_status="RUNNING", comment="control_worker_ok")
+  File "C:\bot\new_infra\Execution_layer\Executors\control_worker.py", line 88, in write_heartbeat
+    write_heartbeat(
+  File "C:\bot\new_infra\Common\db\heartbeat_writer.py", line 66, in write_heartbeat
+    return execute(
+           ^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 75, in execute
+    return run_with_deadlock_retry(_operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\deadlock_retry.py", line 45, in run_with_deadlock_retry
+    return func()
+           ^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 69, in _operation
+    with closing(create_connection(api_file_name)) as conn:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_connect.py", line 56, in create_connection
+    return mysql.connector.connect(**conn_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\pooling.py", line 323, in connect
+    return MySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 185, in __init__
+    self.connect(**kwargs)
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 411, in _open_connection
+    raise err
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 382, in _open_connection
+    self._socket.open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 806, in open_connection
+    raise InterfaceError(
+mysql.connector.errors.InterfaceError: 2003: Can't connect to MySQL server on 'localhost:3306' (Errno 10061: No connection could be made because the target machine actively refused it)
+2026-03-16 13:14:08 | ERROR | bot_L1_01 | ExecutorWorker failed worker_id=bot_L1_01_exec_01
+Traceback (most recent call last):
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 795, in open_connection
+    self.sock.connect(sockaddr)
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\bot\new_infra\Execution_layer\Executors\executor_worker.py", line 73, in run_loop
+    status = self.repositories.get_scheduler_status(self.bot_id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Execution_layer\Executors\repositories.py", line 143, in get_scheduler_status
+    row = fetch_one(
+          ^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 53, in fetch_one
+    return run_with_deadlock_retry(_operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\deadlock_retry.py", line 45, in run_with_deadlock_retry
+    return func()
+           ^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 46, in _operation
+    with closing(create_connection(api_file_name)) as conn:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_connect.py", line 56, in create_connection
+    return mysql.connector.connect(**conn_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\pooling.py", line 323, in connect
+    return MySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 185, in __init__
+    self.connect(**kwargs)
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 411, in _open_connection
+    raise err
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 382, in _open_connection
+    self._socket.open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 806, in open_connection
+    raise InterfaceError(
+mysql.connector.errors.InterfaceError: 2003: Can't connect to MySQL server on 'localhost:3306' (Errno 10061: No connection could be made because the target machine actively refused it)
+2026-03-16 13:14:13 | ERROR | bot_L1_01 | ExecutorWorker failed worker_id=bot_L1_01_exec_02
+Traceback (most recent call last):
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 795, in open_connection
+    self.sock.connect(sockaddr)
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\bot\new_infra\Execution_layer\Executors\executor_worker.py", line 73, in run_loop
+    status = self.repositories.get_scheduler_status(self.bot_id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Execution_layer\Executors\repositories.py", line 143, in get_scheduler_status
+    row = fetch_one(
+          ^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 53, in fetch_one
+    return run_with_deadlock_retry(_operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\deadlock_retry.py", line 45, in run_with_deadlock_retry
+    return func()
+           ^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 46, in _operation
+    with closing(create_connection(api_file_name)) as conn:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_connect.py", line 56, in create_connection
+    return mysql.connector.connect(**conn_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\pooling.py", line 323, in connect
+    return MySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 185, in __init__
+    self.connect(**kwargs)
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 411, in _open_connection
+    raise err
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 382, in _open_connection
+    self._socket.open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 806, in open_connection
+    raise InterfaceError(
+mysql.connector.errors.InterfaceError: 2003: Can't connect to MySQL server on 'localhost:3306' (Errno 10061: No connection could be made because the target machine actively refused it)
+2026-03-16 13:14:17 | ERROR | bot_L1_01 | ExecutorWorker failed worker_id=bot_L1_01_exec_03
+Traceback (most recent call last):
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 795, in open_connection
+    self.sock.connect(sockaddr)
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\bot\new_infra\Execution_layer\Executors\executor_worker.py", line 73, in run_loop
+    status = self.repositories.get_scheduler_status(self.bot_id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Execution_layer\Executors\repositories.py", line 143, in get_scheduler_status
+    row = fetch_one(
+          ^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 53, in fetch_one
+    return run_with_deadlock_retry(_operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\deadlock_retry.py", line 45, in run_with_deadlock_retry
+    return func()
+           ^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 46, in _operation
+    with closing(create_connection(api_file_name)) as conn:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_connect.py", line 56, in create_connection
+    return mysql.connector.connect(**conn_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\pooling.py", line 323, in connect
+    return MySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 185, in __init__
+    self.connect(**kwargs)
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 411, in _open_connection
+    raise err
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 382, in _open_connection
+    self._socket.open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 806, in open_connection
+    raise InterfaceError(
+mysql.connector.errors.InterfaceError: 2003: Can't connect to MySQL server on 'localhost:3306' (Errno 10061: No connection could be made because the target machine actively refused it)
+2026-03-16 13:14:40 | ERROR | bot_L1_01 | ExecutorWorker failed worker_id=bot_L1_01_exec_01
+Traceback (most recent call last):
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 795, in open_connection
+    self.sock.connect(sockaddr)
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\bot\new_infra\Execution_layer\Executors\executor_worker.py", line 73, in run_loop
+    status = self.repositories.get_scheduler_status(self.bot_id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Execution_layer\Executors\repositories.py", line 143, in get_scheduler_status
+    row = fetch_one(
+          ^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 53, in fetch_one
+    return run_with_deadlock_retry(_operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\deadlock_retry.py", line 45, in run_with_deadlock_retry
+    return func()
+           ^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 46, in _operation
+    with closing(create_connection(api_file_name)) as conn:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_connect.py", line 56, in create_connection
+    return mysql.connector.connect(**conn_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\pooling.py", line 323, in connect
+    return MySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 185, in __init__
+    self.connect(**kwargs)
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 411, in _open_connection
+    raise err
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 382, in _open_connection
+    self._socket.open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 806, in open_connection
+    raise InterfaceError(
+mysql.connector.errors.InterfaceError: 2003: Can't connect to MySQL server on 'localhost:3306' (Errno 10061: No connection could be made because the target machine actively refused it)
+2026-03-16 13:14:44 | INFO | bot_L1_01 | ExecutorRuntime stopping bot_id=bot_L1_01
+2026-03-16 13:14:44 | INFO | bot_L1_01 | ExecutorRuntime stopped bot_id=bot_L1_01
+2026-03-16 13:14:45 | ERROR | bot_L1_01 | ExecutorWorker failed worker_id=bot_L1_01_exec_02
+Traceback (most recent call last):
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 795, in open_connection
+    self.sock.connect(sockaddr)
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\bot\new_infra\Execution_layer\Executors\executor_worker.py", line 73, in run_loop
+    status = self.repositories.get_scheduler_status(self.bot_id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Execution_layer\Executors\repositories.py", line 143, in get_scheduler_status
+    row = fetch_one(
+          ^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 53, in fetch_one
+    return run_with_deadlock_retry(_operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\deadlock_retry.py", line 45, in run_with_deadlock_retry
+    return func()
+           ^^^^^^
+  File "C:\bot\new_infra\Common\db\db_execute.py", line 46, in _operation
+    with closing(create_connection(api_file_name)) as conn:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\bot\new_infra\Common\db\db_connect.py", line 56, in create_connection
+    return mysql.connector.connect(**conn_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\pooling.py", line 323, in connect
+    return MySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 185, in __init__
+    self.connect(**kwargs)
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 411, in _open_connection
+    raise err
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\connection.py", line 382, in _open_connection
+    self._socket.open_connection()
+  File "C:\Users\Anton Velychko\AppData\Roaming\Python\Python312\site-packages\mysql\connector\network.py", line 806, in open_connection
+    raise InterfaceError(
+mysql.connector.errors.InterfaceError: 2003: Can't connect to MySQL server on 'localhost:3306' (Errno 10061: No connection could be made because the target machine actively refused it)
+2026-03-16 13:14:47 | INFO | bot_L1_01 | ExecutorWorker stopped worker_id=bot_L1_01_exec_03

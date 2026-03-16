@@ -1,0 +1,4 @@
+SELECT control_status
+FROM scheduler
+WHERE worker_id = %s
+LIMIT 1

@@ -1,0 +1,4 @@
+UPDATE bot_daily_snapshot
+SET current_equity = %(current_equity)s
+WHERE bot_id = %(bot_id)s
+  AND snapshot_date = %(snapshot_date)s

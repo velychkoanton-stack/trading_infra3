@@ -1,0 +1,18 @@
+INSERT INTO bot_daily_snapshot (
+    bot_id,
+    snapshot_date,
+    start_equity,
+    start_balance,
+    current_equity,
+    start_ts
+)
+VALUES (
+    %(bot_id)s,
+    %(snapshot_date)s,
+    %(start_equity)s,
+    %(start_balance)s,
+    %(current_equity)s,
+    %(start_ts)s
+)
+ON DUPLICATE KEY UPDATE
+    current_equity = VALUES(current_equity)

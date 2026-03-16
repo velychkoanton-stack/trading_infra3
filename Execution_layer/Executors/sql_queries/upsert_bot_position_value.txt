@@ -1,0 +1,20 @@
+INSERT INTO bot_position_value (
+    bot_id,
+    uuid,
+    pos_value,
+    status,
+    unrealized_pnl,
+    updated_at
+)
+VALUES (
+    %(bot_id)s,
+    %(uuid)s,
+    %(pos_value)s,
+    'open',
+    %(unrealized_pnl)s,
+    %(updated_at)s
+)
+ON DUPLICATE KEY UPDATE
+    pos_value = VALUES(pos_value),
+    unrealized_pnl = VALUES(unrealized_pnl),
+    updated_at = VALUES(updated_at)

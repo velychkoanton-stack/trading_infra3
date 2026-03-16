@@ -1,0 +1,3 @@
+DELETE FROM bot_position_value
+WHERE bot_id = %(bot_id)s
+  AND uuid = %(uuid)s
