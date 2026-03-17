@@ -33,10 +33,46 @@ SELECT
     p.level_180,
     p.quarantine_until,
     p.quarantine_reason,
+    p.activity_score,
     p.last_update_ts AS pair_state_last_update_ts
 
 FROM signal_table s
 JOIN pair_state p
     ON s.uuid = p.uuid
-WHERE p.level_180 <> 'quarantine'
-ORDER BY s.last_update_ts DESC
+LEFT JOIN asset_locks al1
+    ON al1.asset = s.asset_1
+LEFT JOIN asset_locks al2
+    ON al2.asset = s.asset_2
+
+WHERE
+    p.level_180 = %(level_180)s
+    AND p.quarantine_reason IS NULL
+    AND al1.asset IS NULL
+    AND al2.asset IS NULL
+
+    AND p.adf < -2.9
+    AND p.p_value < 0.05
+    AND p.hurst < 0.45
+    AND p.hl IS NOT NULL
+    AND p.hl > 0
+    AND p.hl_spread_med IS NOT NULL
+    AND p.last_spread IS NOT NULL
+    AND ABS(p.last_spread) < ABS(p.hl_spread_med) * 1.2
+
+    AND p.num_trades_180 IS NOT NULL
+    AND p.num_trades_180 >= %(num_trades_180_min)s
+    AND p.num_trades_180 <= %(num_trades_180_max)s
+
+    AND s.last_z_score IS NOT NULL
+    AND ABS(s.last_z_score) >= 0.9 * CASE
+        WHEN p.hl < 60 THEN 2
+        WHEN p.hl < 100 THEN 2.5
+        WHEN p.hl < 140 THEN 3
+        ELSE 3.5
+    END
+    AND ABS(s.last_z_score) < %(z_upper_threshold)s
+
+ORDER BY
+    p.num_trades_180 ASC,
+    ABS(s.last_z_score) DESC,
+    p.activity_score DESC

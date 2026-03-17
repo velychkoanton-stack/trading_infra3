@@ -45,10 +45,22 @@ class ExecutorRepositories:
     # SIGNAL / PAIR STATE
     # -------------------------------------------------
 
-    def fetch_candidate_pool(self) -> list[CandidatePair]:
+    def fetch_candidate_pool(
+        self,
+        level_180: str,
+        z_upper_threshold: float,
+        num_trades_180_min: int,
+        num_trades_180_max: int,
+    ) -> list[CandidatePair]:
         rows = fetch_all(
             sql=self.sql_select_candidates,
             api_file_name=self.api_file_name,
+            params={
+                "level_180": level_180,
+                "z_upper_threshold": z_upper_threshold,
+                "num_trades_180_min": num_trades_180_min,
+                "num_trades_180_max": num_trades_180_max,
+            },
         )
 
         result: list[CandidatePair] = []
@@ -57,18 +69,6 @@ class ExecutorRepositories:
             result.append(CandidatePair(**row))
 
         return result
-
-    def fetch_candidate_by_uuid(self, uuid: str) -> Optional[CandidatePair]:
-        row = fetch_one(
-            sql=self.sql_select_candidate_by_uuid,
-            api_file_name=self.api_file_name,
-            params=(uuid,),
-        )
-
-        if not row:
-            return None
-
-        return CandidatePair(**row)
 
     # -------------------------------------------------
     # ASSET LOCKS

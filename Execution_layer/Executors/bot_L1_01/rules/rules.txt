@@ -1,6 +1,10 @@
 level_180=level_1
 
+num_trades_180_min=0
+num_trades_180_max=7
+
 z_exit=6
+z_upper_threshold=5
 
 test_total_exposure=1000
 test_leverage=2

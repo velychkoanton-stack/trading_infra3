@@ -92,25 +92,22 @@ class ExecutorBase:
     # -------------------------------------------------------
 
     def load_candidates(self) -> list[CandidatePair]:
-        return self.repositories.fetch_candidate_pool()
+        target_level = self.rules.get("level_180", "").strip()
+        z_upper_threshold = float(self.rules.get("z_upper_threshold", 5))
+        num_trades_180_min = int(float(self.rules.get("num_trades_180_min", 0)))
+        num_trades_180_max = int(float(self.rules.get("num_trades_180_max", 999999)))
+
+        return self.repositories.fetch_candidate_pool(
+            level_180=target_level,
+            z_upper_threshold=z_upper_threshold,
+            num_trades_180_min=num_trades_180_min,
+            num_trades_180_max=num_trades_180_max,
+        )
 
     def select_candidate(self, candidates: list[CandidatePair]) -> CandidatePair | None:
-        """
-        First version:
-        - take first candidate that matches this bot level
-        - skip quarantined
-        - skip stale signal / stale pair_state
-        """
-        target_level = self.rules.get("level_180", "").strip()
         now = datetime.now(timezone.utc).replace(tzinfo=None)
 
         for candidate in candidates:
-            if target_level and candidate.level_180 != target_level:
-                continue
-
-            if candidate.quarantine_reason:
-                continue
-
             signal_age_sec = (now - candidate.signal_last_update_ts).total_seconds()
             if signal_age_sec > self.bot_config.signal_stale_sec:
                 continue
