@@ -99,16 +99,16 @@ class ControlWorker:
     def ensure_daily_snapshot(self) -> None:
         account = self.support_bridge.get_account_snapshot()
 
-        equity = float(account.get("equity") or 0.0)
-        balance = float(account.get("wallet_balance") or 0.0)
+        wallet_balance = float(account.get("wallet_balance") or 0.0)
 
-        # Do not create daily snapshot until support/account state is actually ready.
-        if equity <= 0 or balance <= 0:
+        # Daily snapshot source of truth = wallet balance.
+        # We intentionally use wallet_balance for both start_balance and start_equity
+        # so scheduler / daily guard logic stays stable and aligned with old RM logic.
+        if wallet_balance <= 0:
             self.logger.warning(
-                "Skipping daily snapshot init because account state is not ready | bot_id=%s equity=%s balance=%s",
+                "Skipping daily snapshot init because wallet_balance is not ready | bot_id=%s wallet_balance=%s",
                 self.bot_config.bot_id,
-                equity,
-                balance,
+                wallet_balance,
             )
             return
 
@@ -118,16 +118,16 @@ class ControlWorker:
         self.repositories.ensure_daily_snapshot(
             bot_id=self.bot_config.bot_id,
             snapshot_date=today,
-            start_equity=equity,
-            start_balance=balance,
-            current_equity=equity,
+            start_equity=wallet_balance,
+            start_balance=wallet_balance,
+            current_equity=wallet_balance,
             start_ts=now,
         )
 
         self.repositories.update_current_equity(
             bot_id=self.bot_config.bot_id,
             snapshot_date=today,
-            current_equity=equity,
+            current_equity=wallet_balance,
         )
 
     # -------------------------------------------------------
