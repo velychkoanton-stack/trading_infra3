@@ -102,6 +102,16 @@ class ControlWorker:
         equity = float(account.get("equity") or 0.0)
         balance = float(account.get("wallet_balance") or 0.0)
 
+        # Do not create daily snapshot until support/account state is actually ready.
+        if equity <= 0 or balance <= 0:
+            self.logger.warning(
+                "Skipping daily snapshot init because account state is not ready | bot_id=%s equity=%s balance=%s",
+                self.bot_config.bot_id,
+                equity,
+                balance,
+            )
+            return
+
         today = date.today()
         now = datetime.now()
 

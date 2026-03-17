@@ -472,6 +472,16 @@ class ExecutorBase:
 
         if candidate_refresh is None:
             return CloseDecision(True, "candidate_missing")
+        
+        pos1 = self.support_bridge.get_position(record.pybit_symbol_1)
+        pos2 = self.support_bridge.get_position(record.pybit_symbol_2)
+
+        leg1_open = pos1 is not None
+        leg2_open = pos2 is not None
+
+        if leg1_open != leg2_open:
+            return CloseDecision(True, "leg_missing")
+
 
         signal_age_sec = (now - candidate_refresh.signal_last_update_ts).total_seconds()
         if signal_age_sec > self.bot_config.signal_stale_sec:
