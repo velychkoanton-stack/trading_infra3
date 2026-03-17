@@ -115,6 +115,90 @@ class OrderManager:
             return 0.0
 
     # -------------------------------------------------------
+    # EMERGENCY FLATTEN HELPERS
+    # -------------------------------------------------------
+
+    def _get_reverse_side(self, side: str) -> str:
+        side_norm = str(side).strip().lower()
+        if side_norm == "buy":
+            return "sell"
+        return "buy"
+
+    def flatten_symbol_position(
+        self,
+        symbol: str,
+        original_side: str,
+        leverage: float,
+        fallback_amount: float,
+    ) -> bool:
+        """
+        Emergency flatten for one symbol.
+
+        Tries to read current live position size from broker first.
+        Falls back to the originally intended order amount if needed.
+        """
+        try:
+            live_amount = self.fetch_position_amount(symbol)
+            amount_to_close = float(live_amount or 0.0)
+
+            if amount_to_close <= 0:
+                amount_to_close = float(fallback_amount or 0.0)
+
+            if amount_to_close <= 0:
+                self.logger.warning(
+                    "flatten skip symbol=%s because close amount is zero",
+                    symbol,
+                )
+                return True
+
+            reverse_side = self._get_reverse_side(original_side)
+
+            self.logger.warning(
+                "emergency flatten start symbol=%s reverse_side=%s amount=%.10f",
+                symbol,
+                reverse_side,
+                amount_to_close,
+            )
+
+            order = self.place_market_order(
+                symbol=symbol,
+                side=reverse_side,
+                amount=amount_to_close,
+                leverage=leverage,
+            )
+
+            if not order:
+                self.logger.error(
+                    "emergency flatten order failed symbol=%s reverse_side=%s amount=%.10f",
+                    symbol,
+                    reverse_side,
+                    amount_to_close,
+                )
+                return False
+
+            time.sleep(2.0)
+
+            remaining = self.fetch_position_amount(symbol)
+
+            if remaining > 0:
+                self.logger.error(
+                    "emergency flatten verify failed symbol=%s remaining=%.10f",
+                    symbol,
+                    remaining,
+                )
+                return False
+
+            self.logger.warning(
+                "emergency flatten success symbol=%s",
+                symbol,
+            )
+            return True
+
+        except Exception as e:
+            self.logger.exception("flatten_symbol_position failure symbol=%s err=%s", symbol, e)
+            return False
+
+    # -------------------------------------------------------
     # OPEN PAIR
     # -------------------------------------------------------
 
@@ -145,6 +229,14 @@ class OrderManager:
 
             order_ids.append(order1["id"])
 
+            self.logger.warning(
+                "open_pair leg1 success uuid=%s symbol=%s side=%s amount=%.10f",
+                candidate.uuid,
+                symbol_1,
+                side_1,
+                sizing.amount_asset1,
+            )
+
             order2 = self.place_market_order(
                 symbol_2,
                 side_2,
@@ -153,7 +245,33 @@ class OrderManager:
             )
 
             if not order2:
-                return OrderExecutionResult(False, "leg2_failed", order_ids)
+                self.logger.error(
+                    "open_pair leg2 failed uuid=%s symbol=%s side=%s amount=%.10f | starting emergency flatten for leg1",
+                    candidate.uuid,
+                    symbol_2,
+                    side_2,
+                    sizing.amount_asset2,
+                )
+
+                flatten_ok = self.flatten_symbol_position(
+                    symbol=symbol_1,
+                    original_side=side_1,
+                    leverage=sizing.leverage,
+                    fallback_amount=sizing.amount_asset1,
+                )
+
+                if flatten_ok:
+                    return OrderExecutionResult(
+                        False,
+                        "leg2_failed_leg1_flattened",
+                        order_ids,
+                    )
+
+                return OrderExecutionResult(
+                    False,
+                    "leg2_failed_leg1_flatten_failed",
+                    order_ids,
+                )
 
             order_ids.append(order2["id"])
 
