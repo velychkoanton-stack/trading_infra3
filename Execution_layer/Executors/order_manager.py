@@ -47,7 +47,6 @@ class OrderManager:
 
             try:
                 self.client.set_leverage(leverage, symbol)
-
                 return True
 
             except Exception as e:
@@ -73,7 +72,6 @@ class OrderManager:
     ) -> Optional[dict]:
 
         try:
-
             self.set_leverage_with_retry(symbol, leverage)
 
             order = self.client.create_order(
@@ -100,17 +98,15 @@ class OrderManager:
     def fetch_position_amount(self, symbol: str) -> float:
 
         try:
-
             positions = self.client.fetch_positions([symbol])
 
             if not positions:
                 return 0.0
 
             pos = positions[0]
+            size = float(pos.get("contracts", 0) or 0.0)
 
-            size = float(pos.get("contracts", 0))
-
-            return size
+            return abs(size)
 
         except Exception as e:
 
@@ -184,12 +180,10 @@ class OrderManager:
         order_ids: list[str] = []
 
         try:
-
             amount1 = self.fetch_position_amount(record.ccxt_symbol_1)
             amount2 = self.fetch_position_amount(record.ccxt_symbol_2)
 
             if amount1 > 0:
-
                 side = "sell" if record.side_1 == "buy" else "buy"
 
                 o = self.place_market_order(
@@ -199,11 +193,16 @@ class OrderManager:
                     record.leverage,
                 )
 
-                if o:
-                    order_ids.append(o["id"])
+                if not o:
+                    return OrderExecutionResult(
+                        False,
+                        f"close_leg1_failed amount={amount1}",
+                        order_ids,
+                    )
+
+                order_ids.append(o["id"])
 
             if amount2 > 0:
-
                 side = "sell" if record.side_2 == "buy" else "buy"
 
                 o = self.place_market_order(
@@ -213,8 +212,27 @@ class OrderManager:
                     record.leverage,
                 )
 
-                if o:
-                    order_ids.append(o["id"])
+                if not o:
+                    return OrderExecutionResult(
+                        False,
+                        f"close_leg2_failed amount={amount2}",
+                        order_ids,
+                    )
+
+                order_ids.append(o["id"])
+
+            # brief settle time before verification
+            time.sleep(2.0)
+
+            remaining1 = self.fetch_position_amount(record.ccxt_symbol_1)
+            remaining2 = self.fetch_position_amount(record.ccxt_symbol_2)
+
+            if remaining1 > 0 or remaining2 > 0:
+                return OrderExecutionResult(
+                    False,
+                    f"close_verify_failed remaining1={remaining1} remaining2={remaining2}",
+                    order_ids,
+                )
 
             return OrderExecutionResult(
                 success=True,

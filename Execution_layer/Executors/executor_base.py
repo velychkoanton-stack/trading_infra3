@@ -95,6 +95,35 @@ class ExecutorBase:
         return None
 
     # -------------------------------------------------------
+    # CONDITION SNAPSHOTS
+    # -------------------------------------------------------
+
+    def _fmt(self, value) -> str:
+        return "None" if value is None else str(value)
+
+    def build_trade_cond(self, candidate: CandidatePair) -> str:
+        """
+        Must include all pair_state values from adf till last_spread.
+        Also includes z-score / TP / SL for trade context.
+        """
+        parts = [
+            f"ADF:{self._fmt(candidate.adf)}",
+            f"p-value:{self._fmt(candidate.p_value)}",
+            f"Hurst:{self._fmt(candidate.hurst)}",
+            f"HL:{self._fmt(candidate.hl)}",
+            f"spread_skew:{self._fmt(candidate.spread_skew)}",
+            f"spread_kurt:{self._fmt(candidate.spread_kurt)}",
+            f"beta:{self._fmt(candidate.beta)}",
+            f"beta_norm:{self._fmt(candidate.beta_norm)}",
+            f"hl_spread_med:{self._fmt(candidate.hl_spread_med)}",
+            f"last_spread:{self._fmt(candidate.last_spread)}",
+            f"z-score:{self._fmt(candidate.last_z_score)}",
+            f"TP:{self._fmt(candidate.tp)}",
+            f"SL:{self._fmt(candidate.sl)}",
+        ]
+        return ",".join(parts)
+
+    # -------------------------------------------------------
     # OPEN TRADE
     # -------------------------------------------------------
 
@@ -107,7 +136,7 @@ class ExecutorBase:
 
         side_1, side_2 = self.get_entry_sides(z)
 
-                # temporary in-memory duplicate guard
+        # temporary in-memory duplicate guard
         if self.shared_state.get_open_pair(candidate.uuid) is not None:
             self.logger.warning(
                 "uuid=%s already exists in shared_state, skipping open",
@@ -144,6 +173,12 @@ class ExecutorBase:
 
         except Exception as e:
             self.logger.error("price fetch failed for open uuid=%s err=%s", candidate.uuid, e)
+
+            # IMPORTANT: release locks on pre-open failure
+            self.repositories.delete_asset_locks(
+                bot_id=self.bot_config.bot_id,
+                uuid=candidate.uuid,
+            )
             return None
 
         total_exposure = float(self.rules.get("test_total_exposure", 1000))
@@ -191,10 +226,33 @@ class ExecutorBase:
             )
             return None
 
-        # NOTE:
-        # first version uses dummy trade_res_id placeholder
-        # later this will come from trade_res insert result
+        open_cond = self.build_trade_cond(candidate)
+
         trade_res_id = 0
+        try:
+            trade_res_id = int(
+                self.repositories.insert_trade_open(
+                    uuid=candidate.uuid,
+                    bot_id=self.bot_config.bot_id,
+                    pos_val=sizing.total_exposure,
+                    open_cond=open_cond,
+                )
+            )
+        except Exception as e:
+            self.logger.exception(
+                "trade_res open insert failed uuid=%s worker_id=%s err=%s",
+                candidate.uuid,
+                self.worker_id,
+                e,
+            )
+            trade_res_id = 0
+
+        if trade_res_id <= 0:
+            self.logger.error(
+                "trade_res open row missing uuid=%s worker_id=%s; trade will stay managed but DB lifecycle row was not created",
+                candidate.uuid,
+                self.worker_id,
+            )
 
         record = OpenPairRecord(
             uuid=candidate.uuid,
@@ -217,12 +275,13 @@ class ExecutorBase:
         self.shared_state.register_open_pair(record)
 
         self.logger.info(
-            "opened uuid=%s worker_id=%s side1=%s side2=%s exposure=%.2f",
+            "opened uuid=%s worker_id=%s side1=%s side2=%s exposure=%.2f trade_res_id=%s",
             candidate.uuid,
             self.worker_id,
             side_1,
             side_2,
             sizing.total_exposure,
+            trade_res_id,
         )
 
         return record
@@ -260,20 +319,68 @@ class ExecutorBase:
 
     def close_trade(self, record: OpenPairRecord, close_reason: str) -> None:
         self.logger.warning(
-            "closing uuid=%s worker_id=%s reason=%s",
+            "closing uuid=%s worker_id=%s reason=%s trade_res_id=%s",
             record.uuid,
             self.worker_id,
             close_reason,
+            record.trade_res_id,
         )
 
         result = self.order_manager.close_pair(record)
 
         if not result.success:
             self.logger.error(
-                "close failed uuid=%s worker_id=%s message=%s",
+                "close failed uuid=%s worker_id=%s message=%s | keeping locks/state because position may still be live",
                 record.uuid,
                 self.worker_id,
                 result.message,
+            )
+            return
+
+        candidate_refresh = self.repositories.fetch_candidate_by_uuid(record.uuid)
+        close_cond = self.build_trade_cond(candidate_refresh) if candidate_refresh is not None else None
+
+        pnl = self.order_manager.get_total_closed_pnl_for_trade(
+            trade_id=record.trade_res_id,
+            asset1_symbol=record.ccxt_symbol_1,
+            asset2_symbol=record.ccxt_symbol_2,
+            open_dt=record.open_ts,
+        )
+
+        pnl_pers = 0.0
+        if record.initial_exposure > 0:
+            pnl_pers = float(pnl) / float(record.initial_exposure)
+
+        if record.trade_res_id > 0:
+            try:
+                updated_rows = self.repositories.update_trade_close(
+                    trade_id=record.trade_res_id,
+                    pnl=float(pnl),
+                    pnl_pers=float(pnl_pers),
+                    closed_by=close_reason,
+                    close_cond=close_cond,
+                )
+
+                self.logger.info(
+                    "trade_res close updated uuid=%s trade_res_id=%s updated_rows=%s pnl=%.8f pnl_pers=%.8f",
+                    record.uuid,
+                    record.trade_res_id,
+                    updated_rows,
+                    pnl,
+                    pnl_pers,
+                )
+            except Exception as e:
+                self.logger.exception(
+                    "trade_res close update failed uuid=%s trade_res_id=%s err=%s",
+                    record.uuid,
+                    record.trade_res_id,
+                    e,
+                )
+        else:
+            self.logger.error(
+                "trade_res close skipped uuid=%s worker_id=%s because trade_res_id is missing/invalid",
+                record.uuid,
+                self.worker_id,
             )
 
         deleted_locks = self.repositories.delete_asset_locks(

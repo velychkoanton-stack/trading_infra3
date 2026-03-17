@@ -27,9 +27,9 @@ def build_config() -> ExecutorBotConfig:
         heartbeat_interval_sec=30,
         worker_loop_sec=30,
 
-        executor_threads_count=1,
+        executor_threads_count=2,
 
-        executor_start_delay_sec=15.0,
+        executor_start_delay_sec=20.0,
 
         ws_stale_close_sec=120,
         signal_stale_sec=600,
