@@ -165,10 +165,11 @@ class ExecutorRepositories:
         pos_val: float,
         open_cond: str | None,
     ) -> int:
-        from Common.db.db_connect import get_connection
+        """
+        Insert trade_res open row and return the actual auto-increment ID.
+        """
 
-        conn = get_connection(api_file_name=self.api_file_name)
-        try:
+        def _operation(conn) -> int:
             with closing(conn.cursor()) as cursor:
                 cursor.execute(
                     self.sql_insert_trade_open,
@@ -179,11 +180,13 @@ class ExecutorRepositories:
                         "open_cond": open_cond,
                     },
                 )
-                conn.commit()
                 return int(cursor.lastrowid or 0)
-        finally:
-            conn.close()
-            
+
+        return run_in_transaction(
+            api_file_name=self.api_file_name,
+            operation=_operation,
+        )
+
     def update_trade_close(
         self,
         trade_id: int,
