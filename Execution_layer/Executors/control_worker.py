@@ -218,12 +218,23 @@ class ControlWorker:
         private_stale = bool(health.get("private_stream_stale", False))
         public_stale = bool(health.get("public_stream_stale", False))
 
-        is_critical = private_stale or public_stale
+        open_pairs = self.shared_state.get_open_pairs_for_bot(self.bot_config.bot_id)
+        has_open_pairs = len(open_pairs) > 0
+
+        # Private stale matters only when we are actively managing live trades.
+        # When bot is idle, private stream may naturally be quiet.
+        private_is_critical = private_stale and has_open_pairs
+        public_is_critical = public_stale
+
+        is_critical = private_is_critical or public_is_critical
 
         if is_critical:
             self.shared_state.set_ws_critical(
                 True,
-                comment=f"ws_stale private={private_stale} public={public_stale}",
+                comment=(
+                    f"ws_stale private={private_stale} public={public_stale} "
+                    f"has_open_pairs={has_open_pairs}"
+                ),
             )
         else:
             self.shared_state.set_ws_critical(False, comment=None)
