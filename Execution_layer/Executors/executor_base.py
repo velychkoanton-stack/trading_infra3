@@ -98,15 +98,25 @@ class ExecutorBase:
         """
         First version:
         - take first candidate that matches this bot level
-        - detailed rules will be added later
+        - skip quarantined
+        - skip stale signal / stale pair_state
         """
         target_level = self.rules.get("level_180", "").strip()
+        now = datetime.now()
 
         for candidate in candidates:
             if target_level and candidate.level_180 != target_level:
                 continue
 
             if candidate.quarantine_reason:
+                continue
+
+            signal_age_sec = (now - candidate.signal_last_update_ts).total_seconds()
+            if signal_age_sec > self.bot_config.signal_stale_sec:
+                continue
+
+            pair_state_age_sec = (now - candidate.pair_state_last_update_ts).total_seconds()
+            if pair_state_age_sec > self.bot_config.pair_state_stale_sec:
                 continue
 
             return candidate
