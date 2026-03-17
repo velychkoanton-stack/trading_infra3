@@ -493,14 +493,24 @@ class ExecutorBase:
 
         ws_state = self.shared_state.get_ws_critical_state()
         if bool(ws_state.get("is_critical", False)):
+            ws_comment = str(ws_state.get("comment") or "")
+            ws_since = ws_state.get("since")
+
             self.logger.warning(
                 "uuid=%s worker_id=%s ws_critical detected comment=%s since=%s",
                 record.uuid,
                 self.worker_id,
-                ws_state.get("comment"),
-                ws_state.get("since"),
+                ws_comment,
+                ws_since,
             )
-            return CloseDecision(True, "ws_critical")
+
+            # Do NOT close on private-only stale.
+            # Private stream can be quiet even when connection is healthy.
+            # Close only when public pricing side is stale.
+            if "public=True" in ws_comment:
+                return CloseDecision(True, "ws_critical_public")
+
+            # private-only stale -> warning only, continue monitoring
 
         return CloseDecision(False, "")
 
