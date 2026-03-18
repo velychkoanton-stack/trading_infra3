@@ -50,6 +50,14 @@ class ExecutorBase:
     # MAIN ENTRY
     # -------------------------------------------------------
 
+    def is_account_ready_for_open(self) -> bool:
+        account = self.support_bridge.get_account_snapshot()
+
+        wallet_balance = float(account.get("wallet_balance") or 0.0)
+        available_balance = float(account.get("available_balance") or 0.0)
+
+        return wallet_balance > 0 and available_balance > 0
+    
     def run_cycle(self) -> None:
         scheduler_status = self.repositories.get_scheduler_status(self.worker_id)
 
@@ -67,6 +75,13 @@ class ExecutorBase:
                 "worker_id=%s skipping new open because ws_critical comment=%s",
                 self.worker_id,
                 ws_state.get("comment"),
+            )
+            return
+
+        if not self.is_account_ready_for_open():
+            self.logger.info(
+                "worker_id=%s skipping new open because account snapshot is not ready yet",
+                self.worker_id,
             )
             return
 
