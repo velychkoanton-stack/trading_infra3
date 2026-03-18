@@ -94,6 +94,8 @@ class OpenPairRecord:
     initial_exposure: float
     leverage: float
     entry_z_score: float
+    hl_bars_at_open: int
+    hl_timeout_dt: datetime
     status: str = "OPEN"
     last_update_ts: datetime = field(default_factory=datetime.now)
 

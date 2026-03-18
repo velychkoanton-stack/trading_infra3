@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from Execution_layer.Executors.models import (
     CandidatePair,
@@ -160,6 +160,35 @@ class ExecutorBase:
         ]
         return ",".join(parts)
     
+    def is_cointegration_lost(self, candidate: CandidatePair | None) -> bool:
+        if candidate is None:
+            return True
+
+        if candidate.adf is None or candidate.p_value is None:
+            return True
+
+        return not (candidate.adf < -2.9 and candidate.p_value < 0.05)
+
+    def clamp_hl_bars(self, hl_value: float | None) -> int:
+        """
+        Freeze HL in bars at open:
+        - min 50
+        - max 500
+        """
+        if hl_value is None:
+            return 50
+
+        try:
+            hl_int = int(float(hl_value))
+        except Exception:
+            return 50
+
+        if hl_int < 50:
+            return 50
+        if hl_int > 500:
+            return 500
+        return hl_int
+
     def send_telegram_message(self, text: str) -> None:
         try:
             ok = send_tg_message(
@@ -368,6 +397,9 @@ class ExecutorBase:
                 self.worker_id,
             )
 
+        hl_bars_at_open = self.clamp_hl_bars(candidate.hl)
+        hl_timeout_dt = datetime.now() + timedelta(minutes=hl_bars_at_open * 5)
+
         record = OpenPairRecord(
             uuid=candidate.uuid,
             bot_id=self.bot_config.bot_id,
@@ -384,6 +416,8 @@ class ExecutorBase:
             initial_exposure=sizing.total_exposure,
             leverage=sizing.leverage,
             entry_z_score=float(z),
+            hl_bars_at_open=hl_bars_at_open,
+            hl_timeout_dt=hl_timeout_dt,
         )
 
         self.shared_state.register_open_pair(record)
@@ -634,19 +668,41 @@ class ExecutorBase:
         if z is None:
             return CloseDecision(True, "z_score_missing")
 
+        # ---------------------------------------------------
+        # HL timeout cointegration check
+        # Before HL timeout: do NOT check cointegration-loss exit
+        # After HL timeout: if cointegration lost -> close
+        # ---------------------------------------------------
+        now = datetime.now()
+        if now >= record.hl_timeout_dt:
+            if self.is_cointegration_lost(candidate_refresh):
+                return CloseDecision(True, "HL timeout & lost cointegration")
+
+        # ---------------------------------------------------
+        # Extreme z-score + cointegration lost
+        # ---------------------------------------------------
+        z_exit = float(self.rules.get("z_exit", 6))
+        if abs(z) > z_exit:
+            if self.is_cointegration_lost(candidate_refresh):
+                return CloseDecision(True, "Stop_loss_threshold & lost cointegration")
+
+        # ---------------------------------------------------
+        # Zero-cross logic
+        # ---------------------------------------------------
         if (record.entry_z_score > 0 and z <= 0) or (record.entry_z_score < 0 and z >= 0):
             return CloseDecision(True, "z_score_cross_zero")
 
-        if abs(z) >= float(self.rules.get("z_exit", 6)):
-            return CloseDecision(True, "z_score_extreme")
-
+        # ---------------------------------------------------
+        # TP / SL by pair unrealized pnl
+        # tp/sl are stored as fraction: 0.02 = 2%
+        # ---------------------------------------------------
         if pair_unrealized_pnl is not None and record.initial_exposure > 0:
-            pnl_pct = (pair_unrealized_pnl / record.initial_exposure)
+            pnl_fraction = pair_unrealized_pnl / record.initial_exposure
 
-            if pnl_pct >= float(candidate_refresh.tp):
+            if pnl_fraction >= float(candidate_refresh.tp):
                 return CloseDecision(True, "take_profit")
 
-            if pnl_pct <= -float(candidate_refresh.sl):
+            if pnl_fraction <= -float(candidate_refresh.sl):
                 return CloseDecision(True, "stop_loss")
 
         return CloseDecision(False, "")
