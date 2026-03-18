@@ -546,17 +546,14 @@ class OrderManager:
 
         Uses:
         - open_dt as window start
-        - current UTC time as window end
+        - current time as window end
 
-        Includes a few retries because broker history can lag slightly
-        after close execution.
+        Includes retries because broker history can lag slightly after close.
         """
         try:
-            if open_dt.tzinfo is not None:
-                since_ms = int(open_dt.astimezone(timezone.utc).timestamp() * 1000)
-            else:
-                # current project timestamps are effectively UTC-naive for this logic
-                since_ms = int(open_dt.replace(tzinfo=timezone.utc).timestamp() * 1000)
+            # open_dt is created with datetime.now() in local server time.
+            # Use local timestamp conversion directly.
+            since_ms = int(open_dt.timestamp() * 1000)
 
             retries = 4
             sleep_sec = 2.0
@@ -564,6 +561,17 @@ class OrderManager:
 
             for attempt in range(1, retries + 1):
                 until_ms = int(time.time() * 1000)
+
+                # Safety guard
+                if since_ms >= until_ms:
+                    self.logger.warning(
+                        "realized pnl window invalid attempt=%s trade_id=%s since_ms=%s until_ms=%s | adjusting since_ms",
+                        attempt,
+                        trade_id,
+                        since_ms,
+                        until_ms,
+                    )
+                    since_ms = max(until_ms - 60_000, 0)
 
                 pnl1 = self.sum_closed_pnl_for_window(
                     symbol=asset1_symbol,
@@ -590,8 +598,6 @@ class OrderManager:
                     total,
                 )
 
-                # If history already populated, return immediately.
-                # Keep zero possible, but retry a few times first because broker history may lag.
                 if total != 0.0:
                     return total
 
