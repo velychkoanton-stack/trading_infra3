@@ -7,6 +7,7 @@ from Execution_layer.Executors.models import (
     CandidatePair,
     CloseDecision,
     OpenPairRecord,
+    SizingResult,
 )
 from Execution_layer.Executors.symbol_mapper import ccxt_symbol_to_pybit_symbol
 
@@ -160,6 +161,153 @@ class ExecutorBase:
         ]
         return ",".join(parts)
     
+    def _rule_float(self, key: str, default: float) -> float:
+        try:
+            return float(self.rules.get(key, default))
+        except Exception:
+            return float(default)
+
+    def _rule_bool(self, key: str, default: bool) -> bool:
+        raw = str(self.rules.get(key, str(default))).strip().lower()
+        return raw in {"1", "true", "yes", "y", "on"}
+
+    def calculate_position_sizing(self, candidate: CandidatePair) -> SizingResult | None:
+        account = self.support_bridge.get_account_snapshot()
+
+        wallet_balance = float(account.get("wallet_balance") or 0.0)
+        available_balance = float(account.get("available_balance") or 0.0)
+
+        if wallet_balance <= 0 or available_balance <= 0:
+            self.logger.warning(
+                "sizing skipped uuid=%s reason=balance_not_ready wallet_balance=%s available_balance=%s",
+                candidate.uuid,
+                wallet_balance,
+                available_balance,
+            )
+            return None
+
+        balance_cap = self._rule_float("balance_cap", wallet_balance)
+        effective_balance = min(wallet_balance, balance_cap)
+
+        balance_req = self._rule_float("balance_req", 0.20)
+        exp_per_asset = self._rule_float("exp_per_asset", 0.30)
+        bal_to_use = self._rule_float("bal_to_use", 0.10)
+        exp_per_asset1 = self._rule_float("exp_per_asset1", 0.20)
+        bal_to_use1 = self._rule_float("bal_to_use1", 0.20)
+        max_lev = self._rule_float("max_lev", 5.0)
+        min_per_leg_usdt = self._rule_float("min_per_leg_usdt", 800.0)
+        respect_liquidity = self._rule_bool("respect_liquidity", True)
+        beta_norm_min = self._rule_float("beta_norm_min", 0.8)
+        beta_norm_max = self._rule_float("beta_norm_max", 1.2)
+
+        if available_balance < (effective_balance * balance_req):
+            self.logger.warning(
+                "sizing rejected uuid=%s reason=available_balance_below_required available_balance=%.2f required=%.2f",
+                candidate.uuid,
+                available_balance,
+                effective_balance * balance_req,
+            )
+            return None
+
+        if available_balance > (effective_balance * balance_req):
+            exposure_per_asset_base = exp_per_asset * effective_balance
+            balance_to_use = bal_to_use * available_balance
+        else:
+            exposure_per_asset_base = exp_per_asset1 * effective_balance
+            balance_to_use = bal_to_use1 * available_balance
+
+        if balance_to_use <= 0:
+            self.logger.warning("sizing rejected uuid=%s reason=balance_to_use_zero", candidate.uuid)
+            return None
+
+        try:
+            beta_adj = float(candidate.beta_norm or 1.0)
+        except Exception:
+            beta_adj = 1.0
+
+        beta_adj = max(beta_norm_min, min(beta_norm_max, beta_adj))
+
+        ticker_1 = self.order_manager.client.fetch_ticker(candidate.asset_1)
+        ticker_2 = self.order_manager.client.fetch_ticker(candidate.asset_2)
+
+        price_1 = float(ticker_1.get("last") or 0.0)
+        price_2 = float(ticker_2.get("last") or 0.0)
+
+        if price_1 <= 0 or price_2 <= 0:
+            self.logger.error("sizing failed uuid=%s reason=invalid_price", candidate.uuid)
+            return None
+
+        if respect_liquidity:
+            v1_raw = float(candidate.asset1_5m_vol or 0.0)
+            v2_raw = float(candidate.asset2_5m_vol or 0.0)
+
+            v1_cap = max(min_per_leg_usdt, v1_raw)
+            v2_cap = max(min_per_leg_usdt, v2_raw)
+
+            ctrl_is_1 = (v1_raw <= v2_raw)
+
+            e_ctrl = min(exposure_per_asset_base, v1_cap if ctrl_is_1 else v2_cap)
+            e_other_prop = e_ctrl * beta_adj
+            other_cap_eff = v2_cap if ctrl_is_1 else v1_cap
+
+            if e_other_prop > other_cap_eff:
+                scale = (other_cap_eff / e_other_prop) if e_other_prop > 0 else 0.0
+                e_ctrl *= scale
+                e_other_prop = other_cap_eff
+
+            exposure_1 = e_ctrl if ctrl_is_1 else e_other_prop
+            exposure_2 = e_other_prop if ctrl_is_1 else e_ctrl
+
+            exposure_1 = max(exposure_1, min_per_leg_usdt)
+            exposure_2 = max(exposure_2, min_per_leg_usdt)
+
+            controller_leg = 1 if ctrl_is_1 else 2
+        else:
+            exposure_1 = max(exposure_per_asset_base, min_per_leg_usdt)
+            exposure_2 = max(exposure_per_asset_base * beta_adj, min_per_leg_usdt)
+            controller_leg = 1
+
+        total_exposure = exposure_1 + exposure_2
+        leverage = min(total_exposure / balance_to_use, max_lev)
+
+        amount_1 = exposure_1 / price_1
+        amount_2 = exposure_2 / price_2
+
+        if amount_1 <= 0 or amount_2 <= 0:
+            self.logger.error("sizing failed uuid=%s reason=non_positive_amount", candidate.uuid)
+            return None
+
+        self.logger.info(
+            "sizing uuid=%s effective_balance=%.2f available_balance=%.2f exposure1=%.2f exposure2=%.2f total=%.2f lev=%.2f beta=%.4f liquidity=%s",
+            candidate.uuid,
+            effective_balance,
+            available_balance,
+            exposure_1,
+            exposure_2,
+            total_exposure,
+            leverage,
+            beta_adj,
+            respect_liquidity,
+        )
+
+        return SizingResult(
+            leverage=leverage,
+            exposure_asset1=exposure_1,
+            exposure_asset2=exposure_2,
+            amount_asset1=amount_1,
+            amount_asset2=amount_2,
+            price_asset1=price_1,
+            price_asset2=price_2,
+            total_exposure=total_exposure,
+            beta_norm_used=beta_adj,
+            controller_leg=controller_leg,
+        )
+
+    def get_close_mode(self, close_reason: str) -> str:
+        if close_reason in {"stop_loss", "scheduler_stop", "scheduler_sl_block"}:
+            return "extreme"
+        return "normal"
+    
     def is_cointegration_lost(self, candidate: CandidatePair | None) -> bool:
         if candidate is None:
             return True
@@ -286,48 +434,18 @@ class ExecutorBase:
             )
             return None
 
-        last_price_1 = 1.0
-        last_price_2 = 1.0
+        sizing = self.calculate_position_sizing(candidate)
 
-        try:
-            ticker_1 = self.order_manager.client.fetch_ticker(candidate.asset_1)
-            ticker_2 = self.order_manager.client.fetch_ticker(candidate.asset_2)
-
-            last_price_1 = float(ticker_1.get("last") or 1.0)
-            last_price_2 = float(ticker_2.get("last") or 1.0)
-
-        except Exception as e:
-            self.logger.error("price fetch failed for open uuid=%s err=%s", candidate.uuid, e)
-
+        if sizing is None:
+            self.logger.warning(
+                "uuid=%s sizing returned None, releasing locks",
+                candidate.uuid,
+            )
             self.repositories.delete_asset_locks(
                 bot_id=self.bot_config.bot_id,
                 uuid=candidate.uuid,
             )
             return None
-
-        total_exposure = float(self.rules.get("test_total_exposure", 1000))
-        leverage = float(self.rules.get("test_leverage", 2))
-
-        exposure_asset1 = total_exposure / 2.0
-        exposure_asset2 = total_exposure / 2.0
-
-        amount_asset1 = exposure_asset1 / last_price_1
-        amount_asset2 = exposure_asset2 / last_price_2
-
-        from Execution_layer.Executors.models import SizingResult
-
-        sizing = SizingResult(
-            leverage=leverage,
-            exposure_asset1=exposure_asset1,
-            exposure_asset2=exposure_asset2,
-            amount_asset1=amount_asset1,
-            amount_asset2=amount_asset2,
-            price_asset1=last_price_1,
-            price_asset2=last_price_2,
-            total_exposure=total_exposure,
-            beta_norm_used=float(candidate.beta_norm or 1.0),
-            controller_leg=1,
-        )
 
         result = self.order_manager.open_pair(
             candidate=candidate,
@@ -344,17 +462,15 @@ class ExecutorBase:
                 result.message,
             )
 
-            self.repositories.delete_asset_locks(
-                bot_id=self.bot_config.bot_id,
-                uuid=candidate.uuid,
-            )
-
             self.send_critical_alert(
                 title="open_failed",
                 details=f"uuid={candidate.uuid} message={result.message}",
             )
 
-
+            self.repositories.delete_asset_locks(
+                bot_id=self.bot_config.bot_id,
+                uuid=candidate.uuid,
+            )
             return None
 
         open_cond = self.build_trade_cond(candidate)
@@ -382,12 +498,10 @@ class ExecutorBase:
                 self.worker_id,
                 e,
             )
-
             self.send_critical_alert(
                 title="trade_res_open_insert_failed",
                 details=f"uuid={candidate.uuid} err={e}",
             )
-
             trade_res_id = 0
 
         if trade_res_id <= 0:
@@ -423,13 +537,15 @@ class ExecutorBase:
         self.shared_state.register_open_pair(record)
 
         self.logger.info(
-            "opened uuid=%s worker_id=%s side1=%s side2=%s exposure=%.2f trade_res_id=%s",
+            "opened uuid=%s worker_id=%s side1=%s side2=%s exposure=%.2f trade_res_id=%s hl_bars=%s hl_timeout_dt=%s",
             candidate.uuid,
             self.worker_id,
             side_1,
             side_2,
             sizing.total_exposure,
             trade_res_id,
+            hl_bars_at_open,
+            hl_timeout_dt,
         )
 
         self.send_telegram_message(
@@ -478,15 +594,21 @@ class ExecutorBase:
     # -------------------------------------------------------
 
     def close_trade(self, record: OpenPairRecord, close_reason: str) -> None:
+        close_mode = self.get_close_mode(close_reason)
+
         self.logger.warning(
-            "closing uuid=%s worker_id=%s reason=%s trade_res_id=%s",
+            "closing uuid=%s worker_id=%s reason=%s mode=%s trade_res_id=%s",
             record.uuid,
             self.worker_id,
             close_reason,
+            close_mode,
             record.trade_res_id,
         )
 
-        result = self.order_manager.close_pair(record)
+        result = self.order_manager.close_pair(record, mode=close_mode)
+
+        close_mode = self.get_close_mode(close_reason)
+        result = self.order_manager.close_pair(record, mode=close_mode)
 
         if not result.success:
             self.logger.error(
