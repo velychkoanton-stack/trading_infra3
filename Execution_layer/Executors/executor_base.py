@@ -563,6 +563,14 @@ class ExecutorBase:
             hl_timeout_dt,
         )
 
+        self.logger.info(
+            "HL DEBUG uuid=%s raw_hl=%s clamped_hl=%s timeout_min=%s",
+            candidate.uuid,
+            candidate.hl,
+            hl_bars_at_open,
+            hl_bars_at_open * 5,
+        )
+
         self.send_telegram_message(
             self.build_open_tg_message(candidate, record)
         )
