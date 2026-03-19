@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 # this file is used for some running tests in connection.
 # it not part of trading infra.
+=======
+# file used for testing some parts connection
+# not a part of system
+>>>>>>> e90033bd894351cf868fd86141d77978a1cb5890
 
 from Execution_layer.Executors.models import ExecutorBotConfig
 from Execution_layer.Executors.symbol_mapper import ccxt_symbol_to_asset, ccxt_symbol_to_pybit_symbol

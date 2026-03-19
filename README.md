@@ -24,6 +24,7 @@ The architecture is designed to scale up to **~1000 trading pairs** while mainta
 
 Full system design (Miro):
 
+https://miro.com/app/board/uXjVIL2Bep0=/?share_link_id=904842016461
 *2026-03-19: now is old dashboard, need up-to-date!
 
 https://miro.com/app/board/uXjVIL2Bep0=/?share_link_id=904842016461
@@ -155,8 +156,6 @@ The system is designed to **fail safely** rather than maximize uptime.
 ## Dashboard & Results
 
 Performance is tracked in a dashboard:
-
-*2026-03-19: now is old dashboard, need up-to-date!
 
 https://app.powerbi.com/view?r=eyJrIjoiYjFmYTQ4YjMtOGM5YS00YTRjLWFkY2QtNTQ5MzQwNzc1MTBhIiwidCI6ImRmODY3OWNkLWE4MGUtNDVkOC05OWFjLWM4M2VkN2ZmOTVhMCJ9
 
