@@ -1,0 +1,130 @@
+Trading_infra/
+│
+│
+├── API/ +
+│   ├── api_bybit_main.txt +
+│   ├── api_telegram_main.txt +
+│   ├── api_mysql_main.txt +
+│   └── 
+│
+├── Common/ +
+│   │
+│   ├── db/ +
+│   │   ├── db_connect.py + 
+│   │   ├── db_execute.py + 
+│   │   └── deadlock_retry.py +
+│   │
+│   ├── statistics/
+│   │   ├── adf_test.py
+│   │   ├── hurst.py
+│   │   ├── half_life.py
+│   │   ├── beta_calc.py
+│   │   ├── spread_stats.py
+│   │   └── scoring.py
+│   │
+│   ├── parquet/
+│   │   ├── parquet_reader.py
+│   │   ├── parquet_writer.py
+│   │   ├── parquet_updater.py
+│   │   └── symbol_to_path.py
+│   │
+│   ├── config/ +
+│   │   ├── rules_loader.py +
+│   │   └── path_config.py +
+│   │
+│   └── utils/
+│       ├── logger.py
+│       ├── time_utils.py
+│       └── cleanup.py
+│
+├── Selection_layer/
+│   │
+│   ├── Asset_worker/
+│   │   ├── asset_worker.py
+│   │   │
+│   │   ├── sql_queries/
+│   │   │   ├── select_assets_to_update.txt
+│   │   │   ├── insert_new_assets.txt
+│   │   │   ├── mark_delisted_assets.txt
+│   │   │   └── update_asset_metrics.txt
+│   │   │
+│   │   └── rules/
+│   │       └── asset_rules.txt
+│   │
+│   └── Pair_worker/
+│       ├── pair_worker.py
+│       │
+│       ├── sql_queries/
+│       │   ├── select_asset_pool.txt
+│       │   ├── insert_new_pairs.txt
+│       │   ├── select_pairs_for_stat_test.txt
+│       │   ├── update_stat_results.txt
+│       │   ├── update_backtest_results.txt
+│       │   └── update_pair_status.txt
+│       │
+│       └── rules/
+│           └── pair_rules.txt
+│
+├── Working_layer/
+│   │
+│   ├── Signal_worker/
+│   │   ├── signal_worker.py
+│   │   ├── sql_queries/
+│   │   └── rules/
+│   │
+│   ├── Pair_state_worker/
+│   │   ├── pair_state_worker.py
+│   │   ├── sql_queries/
+│   │   └── rules/
+│   │
+│   ├── Asset_locks_worker/
+│   │   ├── asset_locks_worker.py
+│   │   ├── sql_queries/
+│   │   └── rules/
+│   │
+│   ├── Trade_result_worker/
+│   │   ├── trade_result_worker.py
+│   │   ├── sql_queries/
+│   │   └── rules/
+│   │
+│   ├── Position_value_worker/
+│   │   ├── position_value_worker.py
+│   │   ├── sql_queries/
+│   │   └── rules/
+│   │
+│   └── Bot_daily_snapshot_worker/
+│       ├── bot_daily_snapshot_worker.py
+│       ├── sql_queries/
+│       └── rules/
+│
+├── Execution_layer/
+│   │
+│   ├── Scheduler/
+│   │   ├── scheduler.py
+│   │   ├── sql_queries/
+│   │   └── rules/
+│   │
+│   ├── Bot_heartbeat/
+│   │   ├── bot_heartbeat.py
+│   │   ├── sql_queries/
+│   │   └── rules/
+│   │
+│   ├── Executor_L1/
+│   │   ├── executor_l1.py
+│   │   ├── sql_queries/
+│   │   └── rules/
+│   │
+│   └── Executor_L2/
+│       ├── executor_l2.py
+│       ├── sql_queries/
+│       └── rules/
+│
+├── data/
+│   │
+│   ├── parquet/
+│   │   ├── bybit_linear_5m/
+│   │   └── pair_cache/
+│   │
+│   └── logs/
+│
+└── README.md
