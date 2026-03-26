@@ -80,8 +80,8 @@ class PairWorkerA:
         self.worker_name = self.rules.get("WORKER_A_NAME", "pair_worker_a")
         self.mysql_api_file = self.rules["MYSQL_API_FILE"]
         self.bybit_api_file = self.rules["BYBIT_API_FILE"]
-        self.timeframe = self.rules.get("TIMEFRAME", "1h")
-        self.target_candles = int(self.rules.get("TARGET_CANDLES", "1000"))
+        self.timeframe = self.rules.get("TIMEFRAME_A", "1h")
+        self.target_candles = int(self.rules.get("TARGET_CANDLES_A", "1000"))
         self.scheduler_sleep_check_sec = int(self.rules.get("SCHEDULER_SLEEP_CHECK_SEC", "300"))
         self.pair_batch_insert_size = int(self.rules.get("PAIR_BATCH_INSERT_SIZE", "500"))
         self.stat_batch_size = int(self.rules.get("STAT_BATCH_SIZE", "50"))
@@ -135,8 +135,8 @@ class PairWorkerA:
         self.worker_name = self.rules.get("WORKER_A_NAME", "pair_worker_a")
         self.mysql_api_file = self.rules["MYSQL_API_FILE"]
         self.bybit_api_file = self.rules["BYBIT_API_FILE"]
-        self.timeframe = self.rules.get("TIMEFRAME", "1h")
-        self.target_candles = int(self.rules.get("TARGET_CANDLES", "1000"))
+        self.timeframe = self.rules.get("TIMEFRAME_A", "1h")
+        self.target_candles = int(self.rules.get("TARGET_CANDLES_A", "1000"))
         self.scheduler_sleep_check_sec = int(self.rules.get("SCHEDULER_SLEEP_CHECK_SEC", "300"))
         self.pair_batch_insert_size = int(self.rules.get("PAIR_BATCH_INSERT_SIZE", "500"))
         self.stat_batch_size = int(self.rules.get("STAT_BATCH_SIZE", "50"))

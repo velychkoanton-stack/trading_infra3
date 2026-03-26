@@ -10,8 +10,12 @@ SCHEDULER_SLEEP_CHECK_SEC=300
 # Selection layer now works on 1h / 1000 candles
 # and uses its own parquet cache folder
 # =========================================
-TIMEFRAME=1h
-TARGET_CANDLES=1000
+TIMEFRAME_A=1h
+TARGET_CANDLES_A=1000
+
+TIMEFRAME_B=5m
+TARGET_CANDLES_B=10000
+
 SELECTION_PARQUET_DIR=data/parquet_db_select
 
 # =========================================
