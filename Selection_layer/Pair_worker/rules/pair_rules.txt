@@ -27,8 +27,8 @@ STAT_BATCH_SIZE=50
 # =========================================
 # Reliable asset selection for pair creation
 # =========================================
-MIN_LIQ_5M=1000
-MIN_LIQ_1H=12000
+MIN_LIQ_5M=500
+MIN_LIQ_1H=500
 
 # reliable asset set comes from asset_universe
 # where non_stationary_status = 0 and adf IS NOT NULL
