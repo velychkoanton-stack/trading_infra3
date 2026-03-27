@@ -391,7 +391,7 @@ class PairWorkerA:
         stat_test_score: float,
     ) -> bool:
         checks = [
-            self._passes_optional_min(adf, self.rules.get("STAT_MIN_ADF")),
+            self._passes_optional_max(adf, self.rules.get("STAT_MAX_ADF")),
             self._passes_optional_max(p_value, self.rules.get("STAT_MAX_PVALUE")),
             self._passes_optional_max(hurst, self.rules.get("STAT_MAX_HURST")),
             self._passes_optional_min(hl, self.rules.get("STAT_MIN_HL")),

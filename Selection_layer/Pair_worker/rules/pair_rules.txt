@@ -69,7 +69,7 @@ DEFAULT_NEW_PAIR_BT_STATE=fail
 # =========================================
 # Stat test thresholds
 # =========================================
-STAT_MIN_ADF=-2.3
+STAT_MAX_ADF=-2.3
 STAT_MAX_PVALUE=0.20
 STAT_MAX_HURST=0.55
 STAT_MIN_HL=NONE
