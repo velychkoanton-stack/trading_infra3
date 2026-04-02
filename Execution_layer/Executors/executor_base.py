@@ -283,7 +283,8 @@ class ExecutorBase:
             controller_leg = 1
 
         total_exposure = exposure_1 + exposure_2
-        leverage = min(total_exposure / balance_to_use, max_lev)
+        raw_leverage = total_exposure / balance_to_use if balance_to_use > 0 else max_lev
+        leverage = min(max(raw_leverage, 1.0), max_lev)
 
         amount_1 = exposure_1 / price_1
         amount_2 = exposure_2 / price_2
@@ -293,13 +294,14 @@ class ExecutorBase:
             return None
 
         self.logger.info(
-            "sizing uuid=%s effective_balance=%.2f available_balance=%.2f exposure1=%.2f exposure2=%.2f total=%.2f lev=%.2f beta=%.4f liquidity=%s",
+            "sizing uuid=%s effective_balance=%.2f available_balance=%.2f exposure1=%.2f exposure2=%.2f total=%.2f raw_lev=%.4f lev=%.2f beta=%.4f liquidity=%s",
             candidate.uuid,
             effective_balance,
             available_balance,
             exposure_1,
             exposure_2,
             total_exposure,
+            raw_leverage,
             leverage,
             beta_adj,
             respect_liquidity,

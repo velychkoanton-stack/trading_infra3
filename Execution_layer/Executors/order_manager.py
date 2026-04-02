@@ -56,6 +56,8 @@ class OrderManager:
 
     def set_leverage_with_retry(self, symbol: str, leverage: float) -> bool:
         leverage = float(leverage)
+        max_lev = self._rule_float("max_lev", 5.0)
+        leverage = min(max(leverage, 1.0), max_lev)
 
         for attempt in range(3):
             try:
