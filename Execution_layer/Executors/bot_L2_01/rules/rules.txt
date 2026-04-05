@@ -2,7 +2,7 @@ bot_id=bot_L2_01
 environment=demo
 
 mysql_api_file=api_mysql_main.txt
-bybit_api_file=api_credentials_demo_L2_01.txt
+bybit_api_file=api_credentials_demo_L2.txt
 telegram_api_file=api_telegram_level_2.txt
 
 support_monitor=False
