@@ -2,7 +2,7 @@ bot_id=bot_L2_01
 environment=demo
 
 mysql_api_file=api_mysql_main.txt
-bybit_api_file=api_credentials_demo_L2.txt
+bybit_api_file=api_credentials_demo_L2_01.txt
 telegram_api_file=api_telegram_level_2.txt
 
 support_monitor=False
@@ -18,9 +18,9 @@ ws_stale_close_sec=300
 signal_stale_sec=600
 pair_state_stale_sec=1800
 
-level_180=level_1
+level_180=level_2
 num_trades_180_min=0
-num_trades_180_max=7
+num_trades_180_max=200
 z_upper_threshold=5
 z_exit=6
 
