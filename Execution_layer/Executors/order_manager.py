@@ -328,47 +328,65 @@ class OrderManager:
             time.sleep(pause_sec)
 
     def _close_pair_extreme_market_once(self, record: OpenPairRecord) -> OrderExecutionResult:
+        """
+        Extreme close:
+        - still batched
+        - but much faster than normal mode
+        - uses fixed 0.5 sec pause
+        """
+        chunk_usdt = self._rule_float("chunk_usdt", 100.0)
+        extreme_pause_sec = self._rule_float("extreme_chunk_pause_sec", 0.5)
+
         order_ids: list[str] = []
 
-        amount1 = self.fetch_position_amount(record.ccxt_symbol_1)
-        amount2 = self.fetch_position_amount(record.ccxt_symbol_2)
+        while True:
+            amount1 = self.fetch_position_amount(record.ccxt_symbol_1)
+            amount2 = self.fetch_position_amount(record.ccxt_symbol_2)
 
-        if amount1 > 0:
-            side1 = self._get_reverse_side(record.side_1)
-            o1 = self.place_market_order(
-                record.ccxt_symbol_1,
-                side1,
-                amount1,
-                record.leverage,
-            )
-            if not o1:
-                return OrderExecutionResult(False, f"extreme_close_leg1_failed amount={amount1}", order_ids)
-            order_ids.append(o1["id"])
+            if amount1 <= 0 and amount2 <= 0:
+                return OrderExecutionResult(True, "pair_closed_extreme", order_ids)
 
-        if amount2 > 0:
-            side2 = self._get_reverse_side(record.side_2)
-            o2 = self.place_market_order(
-                record.ccxt_symbol_2,
-                side2,
-                amount2,
-                record.leverage,
-            )
-            if not o2:
-                return OrderExecutionResult(False, f"extreme_close_leg2_failed amount={amount2}", order_ids)
-            order_ids.append(o2["id"])
+            if amount1 > 0:
+                price1 = self.fetch_last_price(record.ccxt_symbol_1)
+                if price1 <= 0:
+                    return OrderExecutionResult(False, "extreme_close_leg1_price_invalid", order_ids)
 
-        time.sleep(2.0)
+                close_notional1 = min(chunk_usdt, amount1 * price1)
+                close_amt1 = close_notional1 / price1
+                side1 = self._get_reverse_side(record.side_1)
 
-        is_flat, remaining1, remaining2 = self._is_flat_pair(record)
-        if not is_flat:
-            return OrderExecutionResult(
-                False,
-                f"extreme_close_verify_failed remaining1={remaining1} remaining2={remaining2}",
-                order_ids,
-            )
+                o1 = self.place_market_order(
+                    record.ccxt_symbol_1,
+                    side1,
+                    close_amt1,
+                    record.leverage,
+                )
+                if not o1:
+                    return OrderExecutionResult(False, "extreme_close_leg1_chunk_failed", order_ids)
 
-        return OrderExecutionResult(True, "pair_closed_extreme", order_ids)
+                order_ids.append(o1["id"])
 
+            if amount2 > 0:
+                price2 = self.fetch_last_price(record.ccxt_symbol_2)
+                if price2 <= 0:
+                    return OrderExecutionResult(False, "extreme_close_leg2_price_invalid", order_ids)
+
+                close_notional2 = min(chunk_usdt, amount2 * price2)
+                close_amt2 = close_notional2 / price2
+                side2 = self._get_reverse_side(record.side_2)
+
+                o2 = self.place_market_order(
+                    record.ccxt_symbol_2,
+                    side2,
+                    close_amt2,
+                    record.leverage,
+                )
+                if not o2:
+                    return OrderExecutionResult(False, "extreme_close_leg2_chunk_failed", order_ids)
+
+                order_ids.append(o2["id"])
+
+            time.sleep(extreme_pause_sec)
     # -------------------------------------------------------
     # EMERGENCY FLATTEN HELPERS
     # -------------------------------------------------------
@@ -571,7 +589,10 @@ class OrderManager:
         open_dt: datetime,
     ) -> float:
         try:
-            since_ms = int(open_dt.timestamp() * 1000)
+            pnl_fetch_lookback_sec = self._rule_float("pnl_fetch_lookback_sec", 120.0)
+            since_ms = int((open_dt.timestamp() - pnl_fetch_lookback_sec) * 1000)
+            if since_ms < 0:
+                since_ms = 0
 
             retries = 4
             sleep_sec = 2.0

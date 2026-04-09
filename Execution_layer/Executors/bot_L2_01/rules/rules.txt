@@ -39,6 +39,8 @@ beta_norm_max=1.2
 
 chunk_usdt=200.0
 chunk_pause_sec=3.0
+pnl_fetch_lookback_sec=120
+extreme_chunk_pause_sec=0.5
 
 close_retries=3
 close_retry_sleep_sec=2
