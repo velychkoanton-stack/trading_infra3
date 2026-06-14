@@ -76,15 +76,15 @@ worker.pair_state_worker.heartbeat_sec=900
 worker.pair_state_worker.loop_sec=900
 
 worker.signal_worker_15min.enabled=1
-worker.signal_worker_15min.default_status=SLEEP
-worker.signal_worker_15min.weekend_mode=SLEEP
+worker.signal_worker_15min.default_status=RUNNING
+worker.signal_worker_15min.weekend_mode=RUNNING
 worker.signal_worker_15min.daily_sl_pct=NONE
 worker.signal_worker_15min.heartbeat_sec=900
 worker.signal_worker_15min.loop_sec=900
 
 worker.pair_state_worker_15min.enabled=1
-worker.pair_state_worker_15min.default_status=SLEEP
-worker.pair_state_worker_15min.weekend_mode=SLEEP
+worker.pair_state_worker_15min.default_status=RUNNING
+worker.pair_state_worker_15min.weekend_mode=RUNNING
 worker.pair_state_worker_15min.daily_sl_pct=NONE
 worker.pair_state_worker_15min.heartbeat_sec=3600
 worker.pair_state_worker_15min.loop_sec=3600

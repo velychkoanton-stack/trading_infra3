@@ -98,6 +98,7 @@ class SignalWorker15Min(SignalWorker):
 
     def run_forever(self) -> None:
         self.logger.info("15m signal worker started")
+        run_immediately = True
         while True:
             try:
                 control_status, _ = self._get_effective_control_status()
@@ -108,7 +109,10 @@ class SignalWorker15Min(SignalWorker):
                     time.sleep(self.scheduler_sleep_check_sec)
                     continue
 
-                self._sleep_until_next_candle_boundary()
+                if run_immediately:
+                    run_immediately = False
+                else:
+                    self._sleep_until_next_candle_boundary()
                 self._safe_write_heartbeat("RUNNING", "loop_started")
                 self.run_once()
                 self._safe_write_heartbeat("RUNNING", "loop_ok")

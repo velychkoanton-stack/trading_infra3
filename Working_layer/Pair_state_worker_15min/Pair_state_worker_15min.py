@@ -131,6 +131,7 @@ class PairStateWorker15Min(PairStateWorker):
             self.timeframe,
             self.lookback_candles,
         )
+        run_immediately = True
         while True:
             try:
                 control_status, _ = self._get_effective_control_status()
@@ -141,7 +142,10 @@ class PairStateWorker15Min(PairStateWorker):
                     time.sleep(self.scheduler_sleep_check_sec)
                     continue
 
-                self._sleep_until_next_boundary()
+                if run_immediately:
+                    run_immediately = False
+                else:
+                    self._sleep_until_next_boundary()
                 self._safe_write_heartbeat("RUNNING", "loop_started")
                 self.run_once()
                 self._safe_write_heartbeat("RUNNING", "loop_ok")

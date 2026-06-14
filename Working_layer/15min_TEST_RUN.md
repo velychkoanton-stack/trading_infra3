@@ -45,9 +45,10 @@ and isolated by worker ID or bot ID.
 5. Start the hourly state worker and allow one successful cycle.
 6. Start the 15-minute signal worker and allow one successful cycle.
 7. Confirm fresh rows and valid regime values in both new tables.
-8. Change the three new scheduler defaults and weekend modes from `SLEEP`
-   to `RUNNING`.
-9. Start `Execution_layer/Executors/bot_15min_L1/bot_15min_L1.py`.
+8. The two data workers are configured `RUNNING`. Keep `bot_15min_L1`
+   on `SLEEP` until both tables contain fresh calculated values.
+9. Change only `bot_15min_L1` defaults to `RUNNING`, then start
+   `Execution_layer/Executors/bot_15min_L1/bot_15min_L1.py`.
 
 ## Market Data Storage
 
