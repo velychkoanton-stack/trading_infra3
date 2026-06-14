@@ -75,6 +75,27 @@ worker.pair_state_worker.daily_sl_pct=NONE
 worker.pair_state_worker.heartbeat_sec=900
 worker.pair_state_worker.loop_sec=900
 
+worker.signal_worker_15min.enabled=1
+worker.signal_worker_15min.default_status=SLEEP
+worker.signal_worker_15min.weekend_mode=SLEEP
+worker.signal_worker_15min.daily_sl_pct=NONE
+worker.signal_worker_15min.heartbeat_sec=900
+worker.signal_worker_15min.loop_sec=900
+
+worker.pair_state_worker_15min.enabled=1
+worker.pair_state_worker_15min.default_status=SLEEP
+worker.pair_state_worker_15min.weekend_mode=SLEEP
+worker.pair_state_worker_15min.daily_sl_pct=NONE
+worker.pair_state_worker_15min.heartbeat_sec=3600
+worker.pair_state_worker_15min.loop_sec=3600
+
+worker.bot_15min_L1.enabled=1
+worker.bot_15min_L1.default_status=SLEEP
+worker.bot_15min_L1.weekend_mode=SLEEP
+worker.bot_15min_L1.daily_sl_pct=NONE
+worker.bot_15min_L1.heartbeat_sec=30
+worker.bot_15min_L1.loop_sec=30
+
 worker.bot_L1_01.enabled=1
 worker.bot_L1_01.default_status=RUNNING
 worker.bot_L1_01.weekend_mode=SLEEP

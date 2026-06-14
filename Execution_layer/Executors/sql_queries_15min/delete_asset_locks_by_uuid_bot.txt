@@ -1,0 +1,2 @@
+DELETE FROM asset_locks_15min
+WHERE uuid = %(uuid)s AND bot_id = %(bot_id)s;

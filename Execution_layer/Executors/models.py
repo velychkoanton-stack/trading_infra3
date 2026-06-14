@@ -22,6 +22,9 @@ class ExecutorBotConfig:
     ws_stale_close_sec: int = 120
     signal_stale_sec: int = 600
     pair_state_stale_sec: int = 1800
+    sql_dir_name: str = "sql_queries"
+    asset_lock_table: str = "asset_locks"
+    pair_state_timeframe_minutes: int = 5
 
 
 @dataclass(slots=True)
@@ -61,6 +64,8 @@ class CandidatePair:
     quarantine_reason: Optional[str]
     activity_score: Optional[float]
     pair_state_last_update_ts: datetime
+    entry_z_threshold: Optional[float] = None
+    zscore_sl_threshold: Optional[float] = None
 
 
 @dataclass(slots=True)

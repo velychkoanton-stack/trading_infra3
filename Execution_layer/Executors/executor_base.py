@@ -332,7 +332,20 @@ class ExecutorBase:
         if candidate.adf is None or candidate.p_value is None:
             return True
 
-        return not (candidate.adf < -2.9 and candidate.p_value < 0.05)
+        adf_threshold = self._rule_float("adf_threshold", -2.9)
+        p_value_threshold = self._rule_float("p_value_threshold", 0.05)
+        cointegrated = (
+            candidate.adf < adf_threshold
+            and candidate.p_value < p_value_threshold
+        )
+
+        beta_raw_min = self.rules.get("beta_raw_min")
+        if beta_raw_min is not None and str(beta_raw_min).strip().upper() != "NONE":
+            if candidate.beta is None:
+                return True
+            cointegrated = cointegrated and candidate.beta > float(beta_raw_min)
+
+        return not cointegrated
 
     def clamp_hl_bars(self, hl_value: float | None) -> int:
         """
@@ -340,18 +353,21 @@ class ExecutorBase:
         - min 50
         - max 500
         """
+        min_bars = int(self._rule_float("hl_min_bars", 50))
+        max_bars = int(self._rule_float("hl_max_bars", 500))
+
         if hl_value is None:
-            return 50
+            return min_bars
 
         try:
             hl_int = int(float(hl_value))
         except Exception:
-            return 50
+            return min_bars
 
-        if hl_int < 50:
-            return 50
-        if hl_int > 500:
-            return 500
+        if hl_int < min_bars:
+            return min_bars
+        if hl_int > max_bars:
+            return max_bars
         return hl_int
 
     def send_telegram_message(self, text: str) -> None:
@@ -529,7 +545,10 @@ class ExecutorBase:
             )
 
         hl_bars_at_open = self.clamp_hl_bars(candidate.hl)
-        hl_timeout_dt = datetime.now() + timedelta(minutes=hl_bars_at_open * 5)
+        hl_unit_minutes = int(self.bot_config.pair_state_timeframe_minutes)
+        hl_timeout_dt = datetime.now() + timedelta(
+            minutes=hl_bars_at_open * hl_unit_minutes
+        )
 
         record = OpenPairRecord(
             uuid=candidate.uuid,
@@ -570,7 +589,7 @@ class ExecutorBase:
             candidate.uuid,
             candidate.hl,
             hl_bars_at_open,
-            hl_bars_at_open * 5,
+            hl_bars_at_open * hl_unit_minutes,
         )
 
         self.send_telegram_message(
@@ -629,8 +648,6 @@ class ExecutorBase:
             close_mode,
             record.trade_res_id,
         )
-
-        result = self.order_manager.close_pair(record, mode=close_mode)
 
         close_mode = self.get_close_mode(close_reason)
         result = self.order_manager.close_pair(record, mode=close_mode)
@@ -828,10 +845,25 @@ class ExecutorBase:
         # ---------------------------------------------------
         # Extreme z-score + cointegration lost
         # ---------------------------------------------------
-        z_exit = float(self.rules.get("z_exit", 6))
+        z_exit = float(
+            candidate_refresh.zscore_sl_threshold
+            if candidate_refresh.zscore_sl_threshold is not None
+            else self.rules.get("z_exit", 6)
+        )
         if abs(z) > z_exit:
-            if self.is_cointegration_lost(candidate_refresh):
-                return CloseDecision(True, "Stop_loss_threshold & lost cointegration")
+            requires_coint_loss = self._rule_bool(
+                "zscore_stop_requires_coint_loss", True
+            )
+            if (
+                not requires_coint_loss
+                or self.is_cointegration_lost(candidate_refresh)
+            ):
+                reason = (
+                    "Stop_loss_threshold & lost cointegration"
+                    if requires_coint_loss
+                    else "zscore_stop"
+                )
+                return CloseDecision(True, reason)
 
         # ---------------------------------------------------
         # Zero-cross logic

@@ -1,0 +1,9 @@
+SELECT
+    s.uuid,
+    s.asset_1,
+    s.asset_2,
+    p.id AS pair_state_id
+FROM signal_table_15min s
+LEFT JOIN pair_state_15min p ON p.uuid = s.uuid
+WHERE s.enabled = 1
+ORDER BY s.uuid;

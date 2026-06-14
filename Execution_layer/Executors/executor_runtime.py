@@ -60,7 +60,7 @@ class ExecutorRuntime:
             log_file_path=log_file,
         )
 
-        sql_dir = Path(__file__).resolve().parent / "sql_queries"
+        sql_dir = Path(__file__).resolve().parent / self.bot_config.sql_dir_name
 
         self.support_bridge = SupportBridge(
             environment=self.bot_config.environment,
@@ -74,6 +74,7 @@ class ExecutorRuntime:
         self.repositories = ExecutorRepositories(
             api_file_name=self.bot_config.mysql_api_file,
             sql_dir=sql_dir,
+            asset_lock_table=self.bot_config.asset_lock_table,
         )
 
         self.order_manager = OrderManager(

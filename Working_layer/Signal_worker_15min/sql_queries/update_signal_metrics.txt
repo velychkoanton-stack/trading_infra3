@@ -1,0 +1,13 @@
+UPDATE signal_table_15min
+SET
+    last_update_ts = %(last_update_ts)s,
+    last_z_score = %(last_z_score)s,
+    max_z_score = %(max_z_score)s,
+    min_z_score = %(min_z_score)s,
+    asset1_5m_vol = %(asset1_5m_vol)s,
+    asset1_1h_vol = %(asset1_1h_vol)s,
+    asset2_5m_vol = %(asset2_5m_vol)s,
+    asset2_1h_vol = %(asset2_1h_vol)s,
+    signal_this_month = %(signal_this_month)s,
+    signal_prev_month = %(signal_prev_month)s
+WHERE uuid = %(uuid)s;

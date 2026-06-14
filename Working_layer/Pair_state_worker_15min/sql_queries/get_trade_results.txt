@@ -1,0 +1,3 @@
+SELECT uuid, open_dt, close_dt, pnl, pnl_pers, open_cond
+FROM trade_res_15min
+ORDER BY uuid, open_dt;

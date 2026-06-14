@@ -1,0 +1,21 @@
+SELECT
+    s.uuid,
+    s.asset_1,
+    s.asset_2,
+    s.rolling_window_15m,
+    s.entry_z_threshold,
+    s.last_z_score AS prev_last_z_score,
+    s.signal_this_month,
+    s.signal_prev_month,
+    s.last_update_ts AS signal_last_update_ts,
+    p.adf,
+    p.p_value,
+    p.beta,
+    p.beta_norm,
+    p.level_30,
+    p.level_180,
+    p.quarantine_until
+FROM signal_table_15min s
+LEFT JOIN pair_state_15min p ON p.uuid = s.uuid
+WHERE s.enabled = 1
+ORDER BY s.uuid;

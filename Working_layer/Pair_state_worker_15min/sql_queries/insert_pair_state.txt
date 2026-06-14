@@ -1,0 +1,3 @@
+INSERT INTO pair_state_15min (uuid, hl_timeframe_minutes, last_update_ts)
+VALUES (%(uuid)s, 60, %(last_update_ts)s)
+ON DUPLICATE KEY UPDATE uuid = VALUES(uuid);

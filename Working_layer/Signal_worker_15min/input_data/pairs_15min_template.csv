@@ -1,0 +1,2 @@
+uuid,asset_1,asset_2,tp,sl,rolling_window_15m,open_threshold_multiplier,entry_z_threshold,zscore_sl_threshold,enabled
+EXAMPLE_PAIR,ASSET1/USDT:USDT,ASSET2/USDT:USDT,0.03,0.04,300,1.1,2.2,6,0

@@ -19,9 +19,21 @@ class ExecutorRepositories:
     All SQL access from executors goes through this class.
     """
 
-    def __init__(self, api_file_name: str, sql_dir: str | Path):
+    def __init__(
+        self,
+        api_file_name: str,
+        sql_dir: str | Path,
+        asset_lock_table: str = "asset_locks",
+    ):
         self.api_file_name = api_file_name
         self.sql_dir = Path(sql_dir)
+        allowed_lock_tables = {"asset_locks", "asset_locks_15min"}
+        if asset_lock_table not in allowed_lock_tables:
+            raise ValueError(
+                f"Unsupported asset lock table: {asset_lock_table}. "
+                f"Allowed={sorted(allowed_lock_tables)}"
+            )
+        self.asset_lock_table = asset_lock_table
 
         # load SQL files once
         self.sql_select_candidates = load_sql_file(self.sql_dir / "select_candidates_base.txt")
@@ -105,9 +117,9 @@ class ExecutorRepositories:
             with closing(conn.cursor(dictionary=True)) as cursor:
                 # Re-check inside transaction
                 cursor.execute(
-                    """
+                    f"""
                     SELECT asset
-                    FROM asset_locks
+                    FROM {self.asset_lock_table}
                     WHERE asset IN (%s, %s)
                     LIMIT 1
                     """,

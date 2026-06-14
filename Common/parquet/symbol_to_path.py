@@ -27,9 +27,23 @@ def get_bybit_linear_5m_dir() -> Path:
     return get_project_root() / "data" / "parquet_db" / "bybit_linear_5m"
 
 
+def get_bybit_linear_timeframe_dir(storage_name: str) -> Path:
+    clean_name = str(storage_name).strip()
+    if not clean_name or clean_name in {".", ".."}:
+        raise ValueError(f"Invalid parquet storage name: {storage_name!r}")
+    if "/" in clean_name or "\\" in clean_name:
+        raise ValueError("Parquet storage name must be a directory name, not a path")
+    return get_project_root() / "data" / "parquet_db" / clean_name
+
+
 def get_symbol_parquet_path(symbol: str) -> Path:
     """
     Build full parquet path for one symbol.
     """
     file_name = f"{sanitize_symbol(symbol)}.parquet"
     return get_bybit_linear_5m_dir() / file_name
+
+
+def get_symbol_parquet_path_for_storage(symbol: str, storage_name: str) -> Path:
+    file_name = f"{sanitize_symbol(symbol)}.parquet"
+    return get_bybit_linear_timeframe_dir(storage_name) / file_name
