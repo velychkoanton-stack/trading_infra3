@@ -123,7 +123,9 @@ class PairStateWorker15Min(PairStateWorker):
         self.get_scheduler_statuses_sql = load_sql_file(
             self.sql_dir / "get_scheduler_statuses.txt"
         )
-        self.bybit = create_bybit_client(self.bybit_api_file)
+        # OHLCV is public market data. Keep it unauthenticated so CCXT does not
+        # call private currency endpoints while loading markets.
+        self.bybit = create_bybit_client("")
 
     def run_forever(self) -> None:
         self.logger.info(
@@ -255,10 +257,20 @@ class PairStateWorker15Min(PairStateWorker):
             | {row["asset_2"] for row in pairs}
         )
         cache: dict[str, pd.DataFrame] = {}
+        markets = self.bybit.load_markets()
+        missing_markets = [symbol for symbol in symbols if symbol not in markets]
+        if missing_markets:
+            self.logger.error(
+                "Symbols missing from Bybit markets | count=%s | symbols=%s",
+                len(missing_markets),
+                missing_markets,
+            )
+
         with ThreadPoolExecutor(max_workers=self.symbol_refresh_workers) as pool:
             futures = {
                 pool.submit(self._fetch_hourly_symbol, symbol): symbol
                 for symbol in symbols
+                if symbol in markets
             }
             for future in as_completed(futures):
                 symbol = futures[future]

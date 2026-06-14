@@ -29,11 +29,14 @@ def create_bybit_client(api_file_name: str, demo: bool = False) -> ccxt.bybit:
         api_file_name: file name resolved via get_api_file_path()
         demo: if True, enable Bybit demo trading mode
     """
-    api_path: Path = get_api_file_path(api_file_name)
-    api_config = load_api_file(api_path)
-
-    api_key = api_config.get("API_KEY", "")
-    api_secret = api_config.get("API_SECRET", "")
+    api_key = ""
+    api_secret = ""
+    normalized_api_file = str(api_file_name or "").strip()
+    if normalized_api_file:
+        api_path: Path = get_api_file_path(normalized_api_file)
+        api_config = load_api_file(api_path)
+        api_key = api_config.get("API_KEY", "")
+        api_secret = api_config.get("API_SECRET", "")
 
     client = ccxt.bybit(
         {
