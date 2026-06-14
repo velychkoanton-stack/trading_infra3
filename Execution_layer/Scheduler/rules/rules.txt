@@ -90,8 +90,8 @@ worker.pair_state_worker_15min.heartbeat_sec=3600
 worker.pair_state_worker_15min.loop_sec=3600
 
 worker.bot_15min_L1.enabled=1
-worker.bot_15min_L1.default_status=SLEEP
-worker.bot_15min_L1.weekend_mode=SLEEP
+worker.bot_15min_L1.default_status=RUNNING
+worker.bot_15min_L1.weekend_mode=RUNNING
 worker.bot_15min_L1.daily_sl_pct=NONE
 worker.bot_15min_L1.heartbeat_sec=30
 worker.bot_15min_L1.loop_sec=30
