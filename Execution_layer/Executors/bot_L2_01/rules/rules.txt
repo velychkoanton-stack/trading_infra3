@@ -19,6 +19,9 @@ signal_stale_sec=600
 pair_state_stale_sec=1800
 
 level_180=level_2
+adf_threshold=-2.5
+p_value_threshold=0.10
+beta_raw_min=0.10
 num_trades_180_min=0
 num_trades_180_max=200
 z_upper_threshold=5

@@ -10,6 +10,7 @@ SELECT
     st.last_update_ts AS signal_last_update_ts,
     ps.adf,
     ps.p_value,
+    ps.beta,
     ps.beta_norm,
     ps.level_30,
     ps.level_180,

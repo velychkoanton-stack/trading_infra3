@@ -7,8 +7,9 @@ scheduler_sleep_check_sec=30
 
 lookback_candles=1000
 
-adf_threshold=-2.9
-p_value_threshold=0.05
+adf_threshold=-2.5
+p_value_threshold=0.10
+beta_raw_min=0.10
 
 quarantine_days=14
 quarantine_losing_days_streak=5
@@ -16,8 +17,9 @@ quarantine_recent_trade_days=7
 
 same_event_window_minutes=10
 
-level2_180_min_trades=20
-level2_30_min_trades=5
+level2_180_min_trades=15
+level2_30_min_trades=3
+level2_30_min_expect=-0.1
 removal_min_trades=25
 
 use_log_prices_for_beta=1

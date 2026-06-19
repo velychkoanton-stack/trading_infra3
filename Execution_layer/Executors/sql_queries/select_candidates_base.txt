@@ -50,8 +50,9 @@ WHERE
     AND al1.asset IS NULL
     AND al2.asset IS NULL
 
-    AND p.adf < -2.9
-    AND p.p_value < 0.05
+    AND p.adf < -2.5
+    AND p.p_value < 0.10
+    AND p.beta > 0.10
     AND p.hurst < 0.45
     AND p.hl IS NOT NULL
     AND p.hl > 0

@@ -46,6 +46,7 @@ class SignalWorker:
         self.entry_abs_z_threshold = float(self.rules.get("entry_abs_z_threshold", "2.0"))
         self.adf_threshold = float(self.rules.get("adf_threshold", "-2.9"))
         self.p_value_threshold = float(self.rules.get("p_value_threshold", "0.05"))
+        self.beta_raw_min = float(self.rules.get("beta_raw_min", "0.10"))
 
         self.lookback_candles = int(self.rules.get("lookback_candles", "1000"))
         self.timeframe = self.rules.get("timeframe", "5m")
@@ -457,17 +458,21 @@ class SignalWorker:
     def _pair_is_countable_signal_source(self, pair_row: dict[str, Any]) -> bool:
         adf = pair_row.get("adf")
         p_value = pair_row.get("p_value")
+        beta = pair_row.get("beta")
         level_30 = pair_row.get("level_30")
         level_180 = pair_row.get("level_180")
         quarantine_until = pair_row.get("quarantine_until")
 
-        if adf is None or p_value is None:
+        if adf is None or p_value is None or beta is None:
             return False
 
         if float(adf) >= self.adf_threshold:
             return False
 
         if float(p_value) >= self.p_value_threshold:
+            return False
+
+        if float(beta) <= self.beta_raw_min:
             return False
 
         if str(level_30 or "").lower() == "quarantine":

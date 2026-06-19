@@ -54,11 +54,13 @@ class PairStateWorker:
         self.lookback_candles = int(self.rules.get("lookback_candles", "1000"))
         self.adf_threshold = float(self.rules.get("adf_threshold", "-2.9"))
         self.p_value_threshold = float(self.rules.get("p_value_threshold", "0.05"))
+        self.beta_raw_min = float(self.rules.get("beta_raw_min", "0.10"))
         self.quarantine_days = int(self.rules.get("quarantine_days", "14"))
         self.quarantine_losing_days_streak = int(self.rules.get("quarantine_losing_days_streak", "5"))
         self.same_event_window_minutes = int(self.rules.get("same_event_window_minutes", "10"))
         self.level2_180_min_trades = int(self.rules.get("level2_180_min_trades", "20"))
         self.level2_30_min_trades = int(self.rules.get("level2_30_min_trades", "5"))
+        self.level2_30_min_expect = float(self.rules.get("level2_30_min_expect", "-0.1"))
         self.removal_min_trades = int(self.rules.get("removal_min_trades", "25"))
         self.use_log_prices_for_beta = self._parse_bool(self.rules.get("use_log_prices_for_beta", "1"))
         self.use_log_prices_for_adf = self._parse_bool(self.rules.get("use_log_prices_for_adf", "1"))
@@ -403,6 +405,7 @@ class PairStateWorker:
         is_cointegrated = self._is_cointegrated(
             adf=adf_result["adf"],
             p_value=adf_result["p_value"],
+            beta=beta,
         )
 
         level_30 = self._resolve_level_30(is_cointegrated, metrics_30)
@@ -628,9 +631,10 @@ class PairStateWorker:
             return "level_0"
 
         if (
-            metrics_180["num_trades"] > self.level2_180_min_trades
+            metrics_180["num_trades"] >= self.level2_180_min_trades
+            and metrics_30["num_trades"] >= self.level2_30_min_trades
             and metrics_180["expect"] > 0
-            and metrics_30["expect"] > 0
+            and metrics_30["expect"] > self.level2_30_min_expect
         ):
             return "level_2"
 
@@ -736,10 +740,19 @@ class PairStateWorker:
         window = int(min(max(1, int(round(hl_value))), len(ratio)))
         return float(abs(ratio.tail(window).median()))
 
-    def _is_cointegrated(self, adf: float | None, p_value: float | None) -> bool:
-        if adf is None or p_value is None:
+    def _is_cointegrated(
+        self,
+        adf: float | None,
+        p_value: float | None,
+        beta: float | None,
+    ) -> bool:
+        if adf is None or p_value is None or beta is None:
             return False
-        return float(adf) < self.adf_threshold and float(p_value) < self.p_value_threshold
+        return (
+            float(adf) <= self.adf_threshold
+            and float(p_value) <= self.p_value_threshold
+            and float(beta) >= self.beta_raw_min
+        )
 
     @staticmethod
     def _safe_stat(fn):
