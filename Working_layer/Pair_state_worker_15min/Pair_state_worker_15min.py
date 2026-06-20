@@ -206,6 +206,13 @@ class PairStateWorker15Min(PairStateWorker):
                 self.logger.exception(
                     "Failed 15m pair-state calculation | uuid=%s", pair["uuid"]
                 )
+                updates.append(
+                    self._build_failed_pair_state_metrics(
+                        uuid=pair["uuid"],
+                        raw_trade_rows=trade_map.get(pair["uuid"], []),
+                        now_utc=now_utc,
+                    )
+                )
 
         if updates:
             execute_many(

@@ -170,6 +170,13 @@ class PairStateWorker:
 
             except Exception:
                 self.logger.exception("Failed building pair_state metrics | uuid=%s", uuid)
+                update_params_list.append(
+                    self._build_failed_pair_state_metrics(
+                        uuid=uuid,
+                        raw_trade_rows=trade_map.get(uuid, []),
+                        now_utc=now_utc,
+                    )
+                )
 
         if update_params_list:
             execute_many(
@@ -464,6 +471,49 @@ class PairStateWorker:
 
             "_mark_quarantine": mark_quarantine,
             "_remove_from_working_layer": remove_from_working_layer,
+        }
+
+    def _build_failed_pair_state_metrics(
+        self,
+        uuid: str,
+        raw_trade_rows: list[dict[str, Any]],
+        now_utc: datetime,
+    ) -> dict[str, Any]:
+        normalized_events = self._normalize_trade_events(raw_trade_rows)
+        metrics_30 = self._build_window_trade_metrics(normalized_events, now_utc, days=30)
+        metrics_180 = self._build_window_trade_metrics(normalized_events, now_utc, days=180)
+
+        return {
+            "uuid": uuid,
+            "adf": None,
+            "p_value": None,
+            "hurst": None,
+            "hl": None,
+            "spread_skew": None,
+            "spread_kurt": None,
+            "beta": None,
+            "beta_norm": None,
+            "hl_spread_med": None,
+            "last_spread": None,
+
+            "win_rate_180": metrics_180["win_rate"],
+            "rew_risk_180": metrics_180["rew_risk"],
+            "num_trades_180": metrics_180["num_trades"],
+            "total_pnl_180": metrics_180["total_pnl"],
+            "expect_180": metrics_180["expect"],
+            "level_180": "level_0",
+
+            "win_rate_30": metrics_30["win_rate"],
+            "rew_risk_30": metrics_30["rew_risk"],
+            "num_trades_30": metrics_30["num_trades"],
+            "total_pnl_30": metrics_30["total_pnl"],
+            "expect_30": metrics_30["expect"],
+            "level_30": "level_0",
+
+            "quarantine_until": None,
+            "quarantine_reason": None,
+            "activity_score": float(metrics_30["num_trades"] + metrics_180["num_trades"]),
+            "last_update_ts": now_utc,
         }
 
     def _normalize_trade_events(self, raw_trade_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
