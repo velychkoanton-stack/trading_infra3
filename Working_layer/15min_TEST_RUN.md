@@ -5,7 +5,7 @@ This branch runs beside the production 5-minute strategy.
 ## Timeframes
 
 - Pair state: 500 completed Bybit 1-hour candles.
-- Cointegration regime: `ADF < -2.5`, `p_value < 0.10`, `beta_raw > 0.10`.
+- Cointegration regime: `ADF < -2.5`, `p_value < 0.10`, `beta > 0.10`.
 - Signal: completed Bybit 15-minute candles.
 - Signal rolling window: configured per pair as 100, 200, or 300 bars.
 - Signal spread: `log(asset_1) - capped_beta * log(asset_2)`.

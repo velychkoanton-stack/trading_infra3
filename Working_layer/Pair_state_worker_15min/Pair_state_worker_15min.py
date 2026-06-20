@@ -82,7 +82,9 @@ class PairStateWorker15Min(PairStateWorker):
         self.p_value_threshold = float(
             self.rules.get("p_value_threshold", "0.10")
         )
-        self.beta_raw_min = float(self.rules.get("beta_raw_min", "0.10"))
+        self.beta_min = float(
+            self.rules.get("beta_min", self.rules.get("beta_raw_min", "0.10"))
+        )
         self.quarantine_days = int(self.rules.get("quarantine_days", "14"))
         self.quarantine_losing_days_streak = int(
             self.rules.get("quarantine_losing_days_streak", "5")
@@ -231,7 +233,7 @@ class PairStateWorker15Min(PairStateWorker):
             and beta is not None
             and float(metrics["adf"]) < self.adf_threshold
             and float(metrics["p_value"]) < self.p_value_threshold
-            and float(beta) > self.beta_raw_min
+            and float(beta) > self.beta_min
         )
         metrics_30 = {
             "num_trades": metrics["num_trades_30"],

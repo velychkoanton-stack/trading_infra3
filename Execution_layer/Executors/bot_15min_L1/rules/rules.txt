@@ -29,7 +29,7 @@ zscore_stop_requires_coint_loss=False
 
 adf_threshold=-2.5
 p_value_threshold=0.10
-beta_raw_min=0.10
+beta_min=0.10
 
 hl_min_bars=20
 hl_max_bars=500

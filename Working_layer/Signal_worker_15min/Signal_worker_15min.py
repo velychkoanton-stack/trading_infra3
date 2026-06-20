@@ -77,7 +77,9 @@ class SignalWorker15Min(SignalWorker):
         self.p_value_threshold = float(
             self.rules.get("p_value_threshold", "0.10")
         )
-        self.beta_raw_min = float(self.rules.get("beta_raw_min", "0.10"))
+        self.beta_min = float(
+            self.rules.get("beta_min", self.rules.get("beta_raw_min", "0.10"))
+        )
         self.beta_signal_min = float(
             self.rules.get("beta_signal_min", "0.7")
         )
@@ -180,10 +182,10 @@ class SignalWorker15Min(SignalWorker):
                 f"Aligned 15m rows below window for uuid={pair['uuid']}"
             )
         merged = merged.tail(rolling_window).reset_index(drop=True)
-        beta_raw = float(pair["beta"])
+        beta = float(pair["beta"])
         beta_for_signal = max(
             self.beta_signal_min,
-            min(self.beta_signal_max, beta_raw),
+            min(self.beta_signal_max, beta),
         )
         spread = build_spread_from_beta(
             price_1=merged[f"{asset_1}_close"],
@@ -257,7 +259,7 @@ class SignalWorker15Min(SignalWorker):
             return False
         if float(pair["p_value"]) >= self.p_value_threshold:
             return False
-        if float(pair["beta"]) <= self.beta_raw_min:
+        if float(pair["beta"]) <= self.beta_min:
             return False
         if str(pair.get("level_30") or "").lower() == "quarantine":
             return False

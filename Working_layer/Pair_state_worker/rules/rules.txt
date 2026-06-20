@@ -9,7 +9,7 @@ lookback_candles=1000
 
 adf_threshold=-2.5
 p_value_threshold=0.10
-beta_raw_min=0.10
+beta_min=0.10
 
 quarantine_days=14
 quarantine_losing_days_streak=5

@@ -46,7 +46,9 @@ class SignalWorker:
         self.entry_abs_z_threshold = float(self.rules.get("entry_abs_z_threshold", "2.0"))
         self.adf_threshold = float(self.rules.get("adf_threshold", "-2.9"))
         self.p_value_threshold = float(self.rules.get("p_value_threshold", "0.05"))
-        self.beta_raw_min = float(self.rules.get("beta_raw_min", "0.10"))
+        self.beta_min = float(
+            self.rules.get("beta_min", self.rules.get("beta_raw_min", "0.10"))
+        )
 
         self.lookback_candles = int(self.rules.get("lookback_candles", "1000"))
         self.timeframe = self.rules.get("timeframe", "5m")
@@ -472,7 +474,7 @@ class SignalWorker:
         if float(p_value) >= self.p_value_threshold:
             return False
 
-        if float(beta) <= self.beta_raw_min:
+        if float(beta) <= self.beta_min:
             return False
 
         if str(level_30 or "").lower() == "quarantine":

@@ -339,11 +339,11 @@ class ExecutorBase:
             and candidate.p_value < p_value_threshold
         )
 
-        beta_raw_min = self.rules.get("beta_raw_min")
-        if beta_raw_min is not None and str(beta_raw_min).strip().upper() != "NONE":
+        beta_min = self.rules.get("beta_min", self.rules.get("beta_raw_min"))
+        if beta_min is not None and str(beta_min).strip().upper() != "NONE":
             if candidate.beta is None:
                 return True
-            cointegrated = cointegrated and candidate.beta > float(beta_raw_min)
+            cointegrated = cointegrated and candidate.beta > float(beta_min)
 
         return not cointegrated
 

@@ -6,7 +6,7 @@ worker_name=signal_worker
 entry_abs_z_threshold=2.0
 adf_threshold=-2.5
 p_value_threshold=0.10
-beta_raw_min=0.10
+beta_min=0.10
 
 lookback_candles=1000
 timeframe=5m

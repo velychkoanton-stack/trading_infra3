@@ -54,7 +54,9 @@ class PairStateWorker:
         self.lookback_candles = int(self.rules.get("lookback_candles", "1000"))
         self.adf_threshold = float(self.rules.get("adf_threshold", "-2.9"))
         self.p_value_threshold = float(self.rules.get("p_value_threshold", "0.05"))
-        self.beta_raw_min = float(self.rules.get("beta_raw_min", "0.10"))
+        self.beta_min = float(
+            self.rules.get("beta_min", self.rules.get("beta_raw_min", "0.10"))
+        )
         self.quarantine_days = int(self.rules.get("quarantine_days", "14"))
         self.quarantine_losing_days_streak = int(self.rules.get("quarantine_losing_days_streak", "5"))
         self.same_event_window_minutes = int(self.rules.get("same_event_window_minutes", "10"))
@@ -749,9 +751,9 @@ class PairStateWorker:
         if adf is None or p_value is None or beta is None:
             return False
         return (
-            float(adf) <= self.adf_threshold
-            and float(p_value) <= self.p_value_threshold
-            and float(beta) >= self.beta_raw_min
+            float(adf) < self.adf_threshold
+            and float(p_value) < self.p_value_threshold
+            and float(beta) > self.beta_min
         )
 
     @staticmethod
